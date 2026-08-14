@@ -1,2 +1,10 @@
-# doodhtracker.github.io
-🥛 Doodh Tracker — Gaay &amp; Bhains ka doodh hisaab
+# 🥛 Doodh Tracker
+
+Gaay & Bhains ka doodh hisaab tracker.
+
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```

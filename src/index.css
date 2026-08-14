@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at top, #064e3b 0%, #022c22 100%);
+  background-attachment: fixed;
+}
