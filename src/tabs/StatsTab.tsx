@@ -1,4 +1,6 @@
-import { useEntries, last7Days, typeTotal, fmtDate } from '../store'
+import { useState } from 'react'
+import { useEntries, useRates, last7Days, typeTotal, fmtDate, filterByDateRange, animalBreakdown, calcPaisa, exportCSV, downloadCSV, todayStr } from '../store'
+import { Download, Filter } from 'lucide-react'
 
 function BarChart({ data }: { data: { day: string; Subah: number; Shaam: number }[] }) {
   const maxVal = Math.max(...data.map((d) => d.Subah + d.Shaam), 1)
@@ -38,29 +40,94 @@ function PieChart({ gaay, bhains }: { gaay: number; bhains: number }) {
 
 export default function StatsTab() {
   const entries = useEntries()
+  const rates = useRates()
+  const [fromDate, setFromDate] = useState(todayStr().slice(0, 8) + '01')
+  const [toDate, setToDate] = useState(todayStr())
+
   if (entries.length === 0) {
     return (<div className="bg-emerald-900/40 rounded-xl p-6 text-center border border-emerald-800"><p className="text-emerald-400 text-sm">📊 Abhi koi data nahi. Pehle entries add karo!</p></div>)
   }
+
+  const filtered = filterByDateRange(entries, fromDate, toDate)
   const week = last7Days()
   const weekData = week.map((d) => {
     const morning = entries.filter((e) => e.date === d && e.session === 'morning').reduce((s, e) => s + e.liters, 0)
     const evening = entries.filter((e) => e.date === d && e.session === 'evening').reduce((s, e) => s + e.liters, 0)
     return { day: fmtDate(d).slice(0, 5), Subah: morning, Shaam: evening }
   })
-  const gaayTotal = typeTotal(entries, 'gaay'), bhainsTotal = typeTotal(entries, 'bhains')
-  const grandTotal = entries.reduce((s, e) => s + e.liters, 0)
+  const gaayTotal = typeTotal(filtered, 'gaay')
+  const bhainsTotal = typeTotal(filtered, 'bhains')
+  const grandTotal = filtered.reduce((s, e) => s + e.liters, 0)
+  const totalPaisa = calcPaisa(filtered, rates)
+  const animals = animalBreakdown(filtered)
+
+  function handleExport() {
+    const csv = exportCSV(filtered, rates)
+    downloadCSV(csv, `doodh-tracker-${fromDate}-to-${toDate}.csv`)
+  }
+
   return (
     <div className="space-y-4">
+      <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800">
+        <div className="flex items-center gap-2 mb-2"><Filter className="text-emerald-400" size={16} /><h3 className="text-white font-bold text-sm">Date Filter</h3></div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-emerald-400 text-xs block mb-1">Se</label>
+            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
+              className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400" />
+          </div>
+          <div>
+            <label className="text-emerald-400 text-xs block mb-1">Tak</label>
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
+              className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400" />
+          </div>
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Doodh</p><p className="text-amber-300 text-2xl font-bold">{grandTotal} L</p></div>
-        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Entries</p><p className="text-white text-2xl font-bold">{entries.length}</p></div>
+        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Entries</p><p className="text-white text-2xl font-bold">{filtered.length}</p></div>
       </div>
+      {(rates.gaay > 0 || rates.bhains > 0) && (
+        <div className="bg-green-950/40 rounded-xl p-3 border border-green-800/30 text-center">
+          <p className="text-green-400 text-xs">💰 Kul Paisa ({fmtDate(fromDate)} - {fmtDate(toDate)})</p>
+          <p className="text-green-300 text-2xl font-bold">₹{totalPaisa.toFixed(2)}</p>
+        </div>
+      )}
+      <button onClick={handleExport} className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+        <Download size={20} /> CSV Export Karo
+      </button>
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-amber-950/40 rounded-xl p-3 border border-amber-800/30 text-center"><p className="text-amber-300 text-xs">🐄 Gaay</p><p className="text-white text-xl font-bold">{gaayTotal} L</p></div>
         <div className="bg-blue-950/40 rounded-xl p-3 border border-blue-800/30 text-center"><p className="text-blue-300 text-xs">🐃 Bhains</p><p className="text-white text-xl font-bold">{bhainsTotal} L</p></div>
       </div>
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800"><h3 className="text-white font-bold text-sm mb-3">📊 Pichhle 7 Din — Subah vs Shaam</h3><BarChart data={weekData} /></div>
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800"><h3 className="text-white font-bold text-sm mb-3">🥧 Gaay vs Bhains</h3><PieChart gaay={gaayTotal} bhains={bhainsTotal} /></div>
+      <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800">
+        <h3 className="text-white font-bold text-sm mb-3">🐄 Janwar-wise Hisaab</h3>
+        {animals.length === 0 ? (
+          <p className="text-emerald-600 text-sm text-center py-2">Koi data nahi.</p>
+        ) : (
+          <div className="space-y-2">
+            {animals.map((a, i) => (
+              <div key={i} className="flex items-center justify-between bg-emerald-950/40 rounded-lg p-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{a.type === 'gaay' ? '🐄' : '🐃'}</span>
+                  <div>
+                    <p className="text-white text-sm font-semibold">{a.name}</p>
+                    <p className="text-emerald-500 text-xs">{a.entries} entries</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-amber-300 font-bold">{a.totalLiters} L</p>
+                  {(rates.gaay > 0 || rates.bhains > 0) && (
+                    <p className="text-green-400 text-xs">₹{(a.totalLiters * (a.type === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

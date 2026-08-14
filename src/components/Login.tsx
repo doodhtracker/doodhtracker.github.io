@@ -63,13 +63,11 @@ export default function Login() {
             {mode === 'login' ? 'Apna account kholo' : mode === 'signup' ? 'Naya account banao' : 'PIN reset karo'}
           </p>
         </div>
-
         {success && (
           <div className="bg-green-900/50 border border-green-700 rounded-lg px-4 py-2 mb-3 text-green-300 text-sm text-center">
             {success}
           </div>
         )}
-
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
@@ -88,7 +86,6 @@ export default function Login() {
             </button>
           </form>
         )}
-
         {mode === 'signup' && (
           <form onSubmit={handleSignup} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
@@ -107,7 +104,6 @@ export default function Login() {
             </button>
           </form>
         )}
-
         {mode === 'forgot' && (
           <form onSubmit={handleForgot} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
@@ -131,7 +127,6 @@ export default function Login() {
             </button>
           </form>
         )}
-
         <div className="mt-4 text-center space-y-2">
           {mode === 'forgot' ? (
             <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm flex items-center justify-center gap-1">
@@ -156,7 +151,6 @@ export default function Login() {
             </>
           )}
         </div>
-
         <p className="text-emerald-600 text-xs text-center mt-4">
           🔒 Tumhara data sirf tumhare browser mein save hota hai. Koi dusra nahi dekh sakta.
         </p>

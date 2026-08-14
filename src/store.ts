@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { MilkEntry, User, Tab } from './types'
+import type { MilkEntry, User, Tab, Rates } from './types'
 
 interface StoreState {
   currentUser: string | null
@@ -11,10 +11,21 @@ interface StoreState {
   logout: () => void
   allEntries: Record<string, MilkEntry[]>
   nextEntryId: Record<string, number>
+  allRates: Record<string, Rates>
+  setRates: (gaay: number, bhains: number) => void
+  allReminders: Record<string, ReminderConfig>
+  setReminders: (config: ReminderConfig) => void
   activeTab: Tab
   setActiveTab: (t: Tab) => void
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
+}
+
+export interface ReminderConfig {
+  morningEnabled: boolean
+  eveningEnabled: boolean
+  morningTime: string
+  eveningTime: string
 }
 
 export const useStore = create<StoreState>()(
@@ -24,6 +35,8 @@ export const useStore = create<StoreState>()(
       users: {},
       allEntries: {},
       nextEntryId: {},
+      allRates: {},
+      allReminders: {},
       activeTab: 'home',
 
       login: (username, pin) => {
@@ -41,6 +54,8 @@ export const useStore = create<StoreState>()(
           users: { ...s.users, [key]: { username: key, pin } },
           allEntries: { ...s.allEntries, [key]: [] },
           nextEntryId: { ...s.nextEntryId, [key]: 1 },
+          allRates: { ...s.allRates, [key]: { gaay: 0, bhains: 0 } },
+          allReminders: { ...s.allReminders, [key]: { morningEnabled: false, eveningEnabled: false, morningTime: '06:00', eveningTime: '18:00' } },
           currentUser: key,
         }))
         return true
@@ -50,24 +65,31 @@ export const useStore = create<StoreState>()(
         const key = username.toLowerCase().trim()
         const u = get().users[key]
         if (!u) return false
-        set((s) => ({
-          users: { ...s.users, [key]: { ...s.users[key], pin: newPin } },
-        }))
+        set((s) => ({ users: { ...s.users, [key]: { ...s.users[key], pin: newPin } } }))
         return true
       },
 
       logout: () => set({ currentUser: null, activeTab: 'home' }),
       setActiveTab: (t) => set({ activeTab: t }),
 
+      setRates: (gaay, bhains) => {
+        const u = get().currentUser
+        if (!u) return
+        set((s) => ({ allRates: { ...s.allRates, [u]: { gaay, bhains } } }))
+      },
+
+      setReminders: (config) => {
+        const u = get().currentUser
+        if (!u) return
+        set((s) => ({ allReminders: { ...s.allReminders, [u]: config } }))
+      },
+
       addEntry: (e) => {
         const u = get().currentUser
         if (!u) return
         const id = get().nextEntryId[u] || 1
         set((s) => ({
-          allEntries: {
-            ...s.allEntries,
-            [u]: [...(s.allEntries[u] || []), { ...e, id, createdAt: Date.now() }],
-          },
+          allEntries: { ...s.allEntries, [u]: [...(s.allEntries[u] || []), { ...e, id, createdAt: Date.now() }] },
           nextEntryId: { ...s.nextEntryId, [u]: id + 1 },
         }))
       },
@@ -76,14 +98,11 @@ export const useStore = create<StoreState>()(
         const u = get().currentUser
         if (!u) return
         set((s) => ({
-          allEntries: {
-            ...s.allEntries,
-            [u]: (s.allEntries[u] || []).filter((e) => e.id !== id),
-          },
+          allEntries: { ...s.allEntries, [u]: (s.allEntries[u] || []).filter((e) => e.id !== id) },
         }))
       },
     }),
-    { name: 'doodh-tracker-v3' },
+    { name: 'doodh-tracker-v4' },
   ),
 )
 
@@ -93,13 +112,111 @@ export function useEntries(): MilkEntry[] {
   return currentUser ? (allEntries[currentUser] || []) : []
 }
 
+export function useRates(): Rates {
+  const currentUser = useStore((s) => s.currentUser)
+  const allRates = useStore((s) => s.allRates)
+  return currentUser ? (allRates[currentUser] || { gaay: 0, bhains: 0 }) : { gaay: 0, bhains: 0 }
+}
+
+export function useReminders(): ReminderConfig {
+  const currentUser = useStore((s) => s.currentUser)
+  const allReminders = useStore((s) => s.allReminders)
+  return currentUser ? (allReminders[currentUser] || { morningEnabled: false, eveningEnabled: false, morningTime: '06:00', eveningTime: '18:00' }) : { morningEnabled: false, eveningEnabled: false, morningTime: '06:00', eveningTime: '18:00' }
+}
+
 export function todayStr(): string { return new Date().toISOString().slice(0, 10) }
 export function fmtDate(d: string): string { const [y, m, day] = d.split('-'); return `${day}/${m}/${y}` }
+export function monthStr(d?: string): string { const dt = d ? new Date(d) : new Date(); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}` }
+export function fmtMonth(m: string): string { const [y, mo] = m.split('-'); const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; return `${names[parseInt(mo) - 1]} ${y}` }
+
 export function dayTotal(entries: MilkEntry[], date: string): number { return entries.filter((e) => e.date === date).reduce((s, e) => s + e.liters, 0) }
 export function sessionTotal(entries: MilkEntry[], date: string, session: 'morning' | 'evening'): number { return entries.filter((e) => e.date === date && e.session === session).reduce((s, e) => s + e.liters, 0) }
+
 export function last7Days(): string[] {
   const out: string[] = []
   for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push(d.toISOString().slice(0, 10)) }
   return out
 }
+
 export function typeTotal(entries: MilkEntry[], type: 'gaay' | 'bhains'): number { return entries.filter((e) => e.animalType === type).reduce((s, e) => s + e.liters, 0) }
+
+export function filterByDateRange(entries: MilkEntry[], from: string, to: string): MilkEntry[] {
+  return entries.filter((e) => e.date >= from && e.date <= to)
+}
+
+export function filterByMonth(entries: MilkEntry[], month: string): MilkEntry[] {
+  return entries.filter((e) => e.date.startsWith(month))
+}
+
+export interface AnimalStat {
+  name: string
+  type: 'gaay' | 'bhains'
+  totalLiters: number
+  entries: number
+}
+
+export function animalBreakdown(entries: MilkEntry[]): AnimalStat[] {
+  const map: Record<string, AnimalStat> = {}
+  for (const e of entries) {
+    const key = `${e.animalType}-${e.animalName || 'default'}`
+    if (!map[key]) map[key] = { name: e.animalName || (e.animalType === 'gaay' ? 'Gaay' : 'Bhains'), type: e.animalType, totalLiters: 0, entries: 0 }
+    map[key].totalLiters += e.liters
+    map[key].entries++
+  }
+  return Object.values(map).sort((a, b) => b.totalLiters - a.totalLiters)
+}
+
+export function calcPaisa(entries: MilkEntry[], rates: Rates): number {
+  return entries.reduce((s, e) => s + e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains), 0)
+}
+
+export function monthTotal(entries: MilkEntry[], month: string): number {
+  return filterByMonth(entries, month).reduce((s, e) => s + e.liters, 0)
+}
+
+export function monthPaisa(entries: MilkEntry[], month: string, rates: Rates): number {
+  return calcPaisa(filterByMonth(entries, month), rates)
+}
+
+export function exportCSV(entries: MilkEntry[], rates: Rates): string {
+  const header = 'Date,Janwar,Naam,Session,Litres,Rate,Paisa,Note\n'
+  const rows = entries.map((e) => {
+    const rate = e.animalType === 'gaay' ? rates.gaay : rates.bhains
+    const paisa = e.liters * rate
+    const name = e.animalName || ''
+    const note = (e.note || '').replace(/,/g, ';')
+    return `${e.date},${e.animalType === 'gaay' ? 'Gaay' : 'Bhains'},${name},${e.session === 'morning' ? 'Subah' : 'Shaam'},${e.liters},${rate},${paisa},${note}`
+  })
+  return header + rows.join('\n')
+}
+
+export function downloadCSV(csv: string, filename: string) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+let reminderInterval: ReturnType<typeof setInterval> | null = null
+
+export function startReminders(config: ReminderConfig) {
+  if (reminderInterval) clearInterval(reminderInterval)
+  if (!config.morningEnabled && !config.eveningEnabled) return
+  reminderInterval = setInterval(() => {
+    const now = new Date()
+    const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    if (config.morningEnabled && hhmm === config.morningTime) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🥛 Doodh Tracker', { body: 'Subah ka doodh entry karo!' })
+      }
+    }
+    if (config.eveningEnabled && hhmm === config.eveningTime) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🥛 Doodh Tracker', { body: 'Shaam ka doodh entry karo!' })
+      }
+    }
+  }, 30000)
+}
