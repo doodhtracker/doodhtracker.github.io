@@ -7,6 +7,7 @@ interface StoreState {
   users: Record<string, User>
   login: (username: string, pin: string) => boolean
   signup: (username: string, pin: string) => boolean
+  resetPin: (username: string, newPin: string) => boolean
   logout: () => void
   allEntries: Record<string, MilkEntry[]>
   nextEntryId: Record<string, number>
@@ -14,15 +15,6 @@ interface StoreState {
   setActiveTab: (t: Tab) => void
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
-}
-
-function hashPin(pin: string): string {
-  let h = 0
-  for (let i = 0; i < pin.length; i++) {
-    h = (h << 5) - h + pin.charCodeAt(i)
-    h |= 0
-  }
-  return String(h)
 }
 
 export const useStore = create<StoreState>()(
@@ -35,9 +27,10 @@ export const useStore = create<StoreState>()(
       activeTab: 'home',
 
       login: (username, pin) => {
-        const u = get().users[username.toLowerCase()]
-        if (!u || u.pin !== hashPin(pin)) return false
-        set({ currentUser: username.toLowerCase() })
+        const key = username.toLowerCase().trim()
+        const u = get().users[key]
+        if (!u || u.pin !== pin) return false
+        set({ currentUser: key })
         return true
       },
 
@@ -45,10 +38,20 @@ export const useStore = create<StoreState>()(
         const key = username.toLowerCase().trim()
         if (!key || get().users[key]) return false
         set((s) => ({
-          users: { ...s.users, [key]: { username: key, pin: hashPin(pin) } },
+          users: { ...s.users, [key]: { username: key, pin } },
           allEntries: { ...s.allEntries, [key]: [] },
           nextEntryId: { ...s.nextEntryId, [key]: 1 },
           currentUser: key,
+        }))
+        return true
+      },
+
+      resetPin: (username, newPin) => {
+        const key = username.toLowerCase().trim()
+        const u = get().users[key]
+        if (!u) return false
+        set((s) => ({
+          users: { ...s.users, [key]: { ...s.users[key], pin: newPin } },
         }))
         return true
       },
@@ -61,7 +64,10 @@ export const useStore = create<StoreState>()(
         if (!u) return
         const id = get().nextEntryId[u] || 1
         set((s) => ({
-          allEntries: { ...s.allEntries, [u]: [...(s.allEntries[u] || []), { ...e, id, createdAt: Date.now() }] },
+          allEntries: {
+            ...s.allEntries,
+            [u]: [...(s.allEntries[u] || []), { ...e, id, createdAt: Date.now() }],
+          },
           nextEntryId: { ...s.nextEntryId, [u]: id + 1 },
         }))
       },
@@ -70,11 +76,14 @@ export const useStore = create<StoreState>()(
         const u = get().currentUser
         if (!u) return
         set((s) => ({
-          allEntries: { ...s.allEntries, [u]: (s.allEntries[u] || []).filter((e) => e.id !== id) },
+          allEntries: {
+            ...s.allEntries,
+            [u]: (s.allEntries[u] || []).filter((e) => e.id !== id),
+          },
         }))
       },
     }),
-    { name: 'doodh-tracker-v2' },
+    { name: 'doodh-tracker-v3' },
   ),
 )
 
