@@ -1,11 +1,9 @@
-// Animal types
+// Milk entry — no animal name/tag, just type + session + liters
 export type AnimalType = 'gaay' | 'bhains'
 
 export interface MilkEntry {
   id: number
   date: string
-  animalId: number
-  animalName: string
   animalType: AnimalType
   session: 'morning' | 'evening'
   liters: number
@@ -13,12 +11,9 @@ export interface MilkEntry {
   createdAt: number
 }
 
-export interface Animal {
-  id: number
-  name: string
-  type: AnimalType
-  tagNumber?: string
-  createdAt: number
+export interface User {
+  username: string
+  pin: string
 }
 
 export type Tab = 'home' | 'entry' | 'stats'

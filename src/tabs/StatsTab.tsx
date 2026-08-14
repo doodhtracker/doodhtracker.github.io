@@ -1,4 +1,4 @@
-import { useStore, last7Days, typeTotal, animalTotal, fmtDate } from '../store'
+import { useEntries, last7Days, typeTotal, fmtDate } from '../store'
 
 function BarChart({ data }: { data: { day: string; Subah: number; Shaam: number }[] }) {
   const maxVal = Math.max(...data.map((d) => d.Subah + d.Shaam), 1)
@@ -37,8 +37,7 @@ function PieChart({ gaay, bhains }: { gaay: number; bhains: number }) {
 }
 
 export default function StatsTab() {
-  const entries = useStore((s) => s.entries)
-  const animals = useStore((s) => s.animals)
+  const entries = useEntries()
   if (entries.length === 0) {
     return (<div className="bg-emerald-900/40 rounded-xl p-6 text-center border border-emerald-800"><p className="text-emerald-400 text-sm">📊 Abhi koi data nahi. Pehle entries add karo!</p></div>)
   }
@@ -49,7 +48,6 @@ export default function StatsTab() {
     return { day: fmtDate(d).slice(0, 5), Subah: morning, Shaam: evening }
   })
   const gaayTotal = typeTotal(entries, 'gaay'), bhainsTotal = typeTotal(entries, 'bhains')
-  const animalStats = animals.map((a) => ({ ...a, total: animalTotal(entries, a.id) })).sort((a, b) => b.total - a.total)
   const grandTotal = entries.reduce((s, e) => s + e.liters, 0)
   return (
     <div className="space-y-4">
@@ -63,21 +61,6 @@ export default function StatsTab() {
       </div>
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800"><h3 className="text-white font-bold text-sm mb-3">📊 Pichhle 7 Din — Subah vs Shaam</h3><BarChart data={weekData} /></div>
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800"><h3 className="text-white font-bold text-sm mb-3">🥧 Gaay vs Bhains</h3><PieChart gaay={gaayTotal} bhains={bhainsTotal} /></div>
-      <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800">
-        <h3 className="text-white font-bold text-sm mb-3">🏆 Janwar-wise Total</h3>
-        <div className="space-y-2">
-          {animalStats.map((a, i) => (
-            <div key={a.id} className="flex items-center gap-2">
-              <span className="text-emerald-500 text-xs font-bold w-4">{i + 1}.</span>
-              <span className="text-lg">{a.type === 'gaay' ? '🐄' : '🐃'}</span>
-              <div className="flex-1">
-                <div className="flex justify-between mb-0.5"><span className="text-white text-sm font-semibold">{a.name}</span><span className="text-amber-300 text-sm font-bold">{a.total} L</span></div>
-                <div className="h-1.5 bg-emerald-950 rounded-full overflow-hidden"><div className="h-full bg-amber-400 rounded-full" style={{ width: `${animalStats[0].total > 0 ? (a.total / animalStats[0].total) * 100 : 0}%` }} /></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
