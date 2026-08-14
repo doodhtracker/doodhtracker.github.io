@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useStore, useRates, useReminders, useEntries, exportCSV, downloadCSV, startReminders } from '../store'
-import { Settings, Bell, Download, LogOut, Wallet, Milk } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { useStore, useRates, useReminders, useEntries, exportCSV, downloadCSV, parseCSV, startReminders } from '../store'
+import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk } from 'lucide-react'
 
 export default function SettingsTab() {
   const rates = useRates()
@@ -9,6 +9,7 @@ export default function SettingsTab() {
   const setRates = useStore((s) => s.setRates)
   const setReminders = useStore((s) => s.setReminders)
   const logout = useStore((s) => s.logout)
+  const importEntries = useStore((s) => s.importEntries)
   const currentUser = useStore((s) => s.currentUser)
 
   const [gaayRate, setGaayRate] = useState(String(rates.gaay || ''))
@@ -20,6 +21,9 @@ export default function SettingsTab() {
   const [mornTime, setMornTime] = useState(reminders.morningTime)
   const [eveTime, setEveTime] = useState(reminders.eveningTime)
   const [remSaved, setRemSaved] = useState(false)
+
+  const [importMsg, setImportMsg] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
 
   function saveRates() {
     setRates(parseFloat(gaayRate) || 0, parseFloat(bhainsRate) || 0)
@@ -43,6 +47,25 @@ export default function SettingsTab() {
   function exportAll() {
     const csv = exportCSV(entries, rates)
     downloadCSV(csv, `doodh-tracker-all-data.csv`)
+  }
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      const parsed = parseCSV(text)
+      if (parsed.length === 0) {
+        setImportMsg('❌ CSV file sahi nahi hai. Pehle export ki hui file use karo.')
+        return
+      }
+      importEntries(parsed)
+      setImportMsg(`✅ ${parsed.length} entries import ho gayi!`)
+      setTimeout(() => setImportMsg(''), 3000)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
   }
 
   return (
@@ -72,6 +95,7 @@ export default function SettingsTab() {
           </button>
         </div>
       </div>
+
       <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center gap-2 mb-3">
           <Bell className="text-amber-300" size={18} />
@@ -114,6 +138,7 @@ export default function SettingsTab() {
           <p className="text-emerald-600 text-xs text-center">⚠️ Reminder tab kaam karega jab website browser mein khuli hogi</p>
         </div>
       </div>
+
       <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center gap-2 mb-3">
           <Download className="text-amber-300" size={18} />
@@ -125,6 +150,25 @@ export default function SettingsTab() {
           <Download size={18} /> CSV Download Karo ({entries.length} entries)
         </button>
       </div>
+
+      <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
+        <div className="flex items-center gap-2 mb-3">
+          <Upload className="text-amber-300" size={18} />
+          <h3 className="text-white font-bold text-sm">📤 Data Import (Purana Data Wapas Lau)</h3>
+        </div>
+        <p className="text-emerald-500 text-xs mb-3">Pehle export ki hui CSV file upload karo — purana data wapas aa jayega. Duplicate entries automatic skip honge.</p>
+        <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
+        <button onClick={() => fileRef.current?.click()}
+          className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+          <Upload size={18} /> CSV Upload Karo
+        </button>
+        {importMsg && (
+          <div className={`mt-2 text-center text-sm ${importMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
+            {importMsg}
+          </div>
+        )}
+      </div>
+
       <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center gap-2 mb-3">
           <Settings className="text-amber-300" size={18} />
@@ -143,6 +187,7 @@ export default function SettingsTab() {
           </button>
         </div>
       </div>
+
       <p className="text-emerald-600 text-xs text-center pb-2">🥛 Doodh Tracker · Made with ❤️</p>
     </div>
   )

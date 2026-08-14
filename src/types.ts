@@ -22,4 +22,4 @@ export interface Rates {
   bhains: number
 }
 
-export type Tab = 'home' | 'entry' | 'stats' | 'settings'
+export type Tab = 'home' | 'entry' | 'stats' | 'settings' | 'guide'

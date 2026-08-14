@@ -19,6 +19,7 @@ interface StoreState {
   setActiveTab: (t: Tab) => void
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
+  importEntries: (entries: MilkEntry[]) => void
 }
 
 export interface ReminderConfig {
@@ -99,6 +100,27 @@ export const useStore = create<StoreState>()(
         if (!u) return
         set((s) => ({
           allEntries: { ...s.allEntries, [u]: (s.allEntries[u] || []).filter((e) => e.id !== id) },
+        }))
+      },
+
+      importEntries: (newEntries) => {
+        const u = get().currentUser
+        if (!u) return
+        const existing = get().allEntries[u] || []
+        const existingKeys = new Set(existing.map((e) => `${e.date}|${e.animalType}|${e.animalName || ''}|${e.session}|${e.liters}`))
+        const toAdd: MilkEntry[] = []
+        for (const e of newEntries) {
+          const key = `${e.date}|${e.animalType}|${e.animalName || ''}|${e.session}|${e.liters}`
+          if (!existingKeys.has(key)) {
+            toAdd.push(e)
+            existingKeys.add(key)
+          }
+        }
+        const merged = [...existing, ...toAdd]
+        const maxId = merged.reduce((mx, e) => Math.max(mx, e.id), 0)
+        set((s) => ({
+          allEntries: { ...s.allEntries, [u]: merged },
+          nextEntryId: { ...s.nextEntryId, [u]: maxId + 1 },
         }))
       },
     }),
@@ -198,6 +220,28 @@ export function downloadCSV(csv: string, filename: string) {
   link.download = filename
   link.click()
   URL.revokeObjectURL(url)
+}
+
+export function parseCSV(text: string): MilkEntry[] {
+  const lines = text.trim().split('\n')
+  if (lines.length < 2) return []
+  const entries: MilkEntry[] = []
+  let id = 1
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',')
+    if (cols.length < 5) continue
+    const date = cols[0]?.trim()
+    const janwar = cols[1]?.trim().toLowerCase()
+    const naam = cols[2]?.trim() || undefined
+    const sessionRaw = cols[3]?.trim().toLowerCase()
+    const liters = parseFloat(cols[4]?.trim()) || 0
+    const note = cols[7]?.trim() || undefined
+    if (!date || !janwar) continue
+    const animalType = janwar.includes('bhains') ? 'bhains' : 'gaay'
+    const session = sessionRaw.includes('shaam') || sessionRaw.includes('evening') ? 'evening' : 'morning'
+    entries.push({ id: id++, date, animalType, animalName: naam, session, liters, note, createdAt: Date.now() + i })
+  }
+  return entries
 }
 
 let reminderInterval: ReturnType<typeof setInterval> | null = null

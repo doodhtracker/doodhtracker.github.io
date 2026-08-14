@@ -1,4 +1,4 @@
-import { Home, Plus, BarChart3, Settings } from 'lucide-react'
+import { Home, Plus, BarChart3, Settings, BookOpen } from 'lucide-react'
 import { useStore } from '../store'
 
 export default function BottomNav() {
@@ -10,6 +10,7 @@ export default function BottomNav() {
     { id: 'entry' as const, label: 'Entry', icon: Plus },
     { id: 'stats' as const, label: 'Stats', icon: BarChart3 },
     { id: 'settings' as const, label: 'Settings', icon: Settings },
+    { id: 'guide' as const, label: 'Guide', icon: BookOpen },
   ]
 
   return (
@@ -26,8 +27,8 @@ export default function BottomNav() {
                 isActive ? 'text-amber-400' : 'text-emerald-600'
               }`}
             >
-              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[10px] font-semibold">{tab.label}</span>
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-[9px] font-semibold">{tab.label}</span>
             </button>
           )
         })}
