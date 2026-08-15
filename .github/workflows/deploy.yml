@@ -24,10 +24,11 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm run build
-      - name: Copy PWA files to dist
+      - name: Copy PWA and verification files to dist
         run: |
           cp sw.js dist/sw.js
           cp manifest.json dist/manifest.json
+          cp googlec31a1eddde847221.html dist/googlec31a1eddde847221.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
