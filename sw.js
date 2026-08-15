@@ -1,6 +1,6 @@
 // Doodh Tracker Service Worker — FULL offline support
 // Ek baar online khola, phir hamesha offline chalega
-const CACHE_NAME = 'doodh-tracker-v5'
+const CACHE_NAME = 'doodh-tracker-v6'
 
 // Install — skip waiting, take over immediately
 self.addEventListener('install', (event) => {
@@ -27,7 +27,7 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — CACHE FIRST for everything same-origin
 // Pehli baar online aaya toh sab cache ho jayega
-// Doosri baar se sab cache se milega — internet nahi chahiye
+// Doosri baar se cache se chalega — internet nahi chahiye
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 

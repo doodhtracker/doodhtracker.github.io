@@ -46,7 +46,23 @@ export function encryptData(data: string): string {
   }
 }
 
+// Legacy decrypt — purane escape/unescape method se encrypted data ke liye
+function decryptDataLegacy(encrypted: string): string {
+  try {
+    const key = deriveKey()
+    const data = unescape(atob(encrypted))
+    let result = ''
+    for (let i = 0; i < data.length; i++) {
+      result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length))
+    }
+    return result
+  } catch {
+    return ''
+  }
+}
+
 export function decryptData(encrypted: string): string {
+  // Pehle naya TextEncoder/TextDecoder method try karo
   try {
     const key = deriveKey()
     const binary = atob(encrypted)
@@ -59,8 +75,11 @@ export function decryptData(encrypted: string): string {
     for (let i = 0; i < xored.length; i++) {
       dataBytes[i] = xored[i] ^ keyBytes[i % keyBytes.length]
     }
-    return new TextDecoder().decode(dataBytes)
-  } catch {
-    return ''
-  }
+    const decrypted = new TextDecoder().decode(dataBytes)
+    if (decrypted.startsWith('{')) return decrypted
+  } catch {}
+  // Fallback: purana escape/unescape method (migration)
+  const legacy = decryptDataLegacy(encrypted)
+  if (legacy && legacy.startsWith('{')) return legacy
+  return ''
 }
