@@ -11,8 +11,10 @@ const encryptedStorage = createJSONStorage(() => ({
   getItem: (name: string) => {
     const raw = localStorage.getItem(name)
     if (!raw) return null
+    // Try decrypting (new encrypted format)
     const decrypted = decryptData(raw)
     if (decrypted && decrypted.startsWith('{')) return decrypted
+    // Fallback: old unencrypted data (migration)
     return raw
   },
   setItem: (name: string, value: string) => {
@@ -64,15 +66,19 @@ export const useStore = create<StoreState>()(
       allReminders: {},
       activeTab: 'home',
 
+      // LOGIN — async, PIN ko SHA-256 hash karke compare karta hai
+      // Old plain-text PIN ke liye migration fallback bhi hai
       login: async (username, pin) => {
         const key = username.toLowerCase().trim()
         const u = get().users[key]
         if (!u) return false
+        // Try hashed PIN first (new format)
         const ok = await verifyPin(pin, u.pin)
         if (ok) {
           set({ currentUser: key })
           return true
         }
+        // Fallback: old plain-text PIN (migration)
         if (u.pin === pin) {
           const pinHash = await hashPin(pin)
           set((s) => ({ users: { ...s.users, [key]: { ...s.users[key], pin: pinHash } } }))
@@ -82,6 +88,7 @@ export const useStore = create<StoreState>()(
         return false
       },
 
+      // SIGNUP — PIN ko hash karke store karta hai
       signup: async (username, pin) => {
         const key = username.toLowerCase().trim()
         if (!key || get().users[key]) return false
@@ -97,6 +104,7 @@ export const useStore = create<StoreState>()(
         return true
       },
 
+      // RESET PIN — naya PIN bhi hash hoke store hota hai
       resetPin: async (username, newPin) => {
         const key = username.toLowerCase().trim()
         const u = get().users[key]
@@ -185,9 +193,15 @@ export function useReminders(): ReminderConfig {
   return currentUser ? (allReminders[currentUser] || { morningEnabled: false, eveningEnabled: false, morningTime: '06:00', eveningTime: '18:00' }) : { morningEnabled: false, eveningEnabled: false, morningTime: '06:00', eveningTime: '18:00' }
 }
 
-export function todayStr(): string { return new Date().toISOString().slice(0, 10) }
+export function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 export function fmtDate(d: string): string { const [y, m, day] = d.split('-'); return `${day}/${m}/${y}` }
-export function monthStr(d?: string): string { const dt = d ? new Date(d) : new Date(); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}` }
+export function monthStr(d?: string): string {
+  const dt = d ? new Date(d + 'T00:00:00') : new Date()
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`
+}
 export function fmtMonth(m: string): string { const [y, mo] = m.split('-'); const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; return `${names[parseInt(mo) - 1]} ${y}` }
 
 export function dayTotal(entries: MilkEntry[], date: string): number { return entries.filter((e) => e.date === date).reduce((s, e) => s + e.liters, 0) }
@@ -195,7 +209,11 @@ export function sessionTotal(entries: MilkEntry[], date: string, session: 'morni
 
 export function last7Days(): string[] {
   const out: string[] = []
-  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push(d.toISOString().slice(0, 10)) }
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+  }
   return out
 }
 

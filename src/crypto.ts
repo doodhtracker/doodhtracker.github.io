@@ -1,9 +1,8 @@
 // Doodh Tracker — Security utilities
 // SHA-256 PIN hashing + XOR-Base64 data encryption
-// No external libraries — uses browser's built-in Web Crypto API + simple XOR
+// No external libraries — uses browser's built-in Web Crypto API
 
 // ─── SHA-256 PIN Hashing ───
-// PIN ko hash kar ke store karte hain — DevTools mein plain PIN kabhi nahi dikhega
 export async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder()
   const data = encoder.encode(pin + '::doodh-tracker-salt::v5')
@@ -12,15 +11,13 @@ export async function hashPin(pin: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-// PIN verify — user ke PIN ko hash karke stored hash se compare karna
 export async function verifyPin(pin: string, storedHash: string): Promise<boolean> {
   const hash = await hashPin(pin)
   return hash === storedHash
 }
 
 // ─── XOR-Base64 Data Encryption ───
-// Entries ko encrypt kar ke localStorage mein store karna
-// Key = fixed app key (not user PIN, so data works across logins)
+// Uses TextEncoder/TextDecoder for proper UTF-8 byte-level XOR
 
 function deriveKey(): string {
   const seed = 'doodh-tracker::secure-storage::v5'
@@ -29,29 +26,40 @@ function deriveKey(): string {
   return key.slice(0, 64)
 }
 
-function xorString(text: string, key: string): string {
-  let result = ''
-  for (let i = 0; i < text.length; i++) {
-    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length))
-  }
-  return result
-}
-
 export function encryptData(data: string): string {
-  const key = deriveKey()
-  const xored = xorString(data, key)
   try {
-    return btoa(unescape(encodeURIComponent(xored)))
+    const key = deriveKey()
+    const encoder = new TextEncoder()
+    const dataBytes = encoder.encode(data)
+    const keyBytes = encoder.encode(key)
+    const xored = new Uint8Array(dataBytes.length)
+    for (let i = 0; i < dataBytes.length; i++) {
+      xored[i] = dataBytes[i] ^ keyBytes[i % keyBytes.length]
+    }
+    let binary = ''
+    for (let i = 0; i < xored.length; i++) {
+      binary += String.fromCharCode(xored[i])
+    }
+    return btoa(binary)
   } catch {
     return data
   }
 }
 
 export function decryptData(encrypted: string): string {
-  const key = deriveKey()
   try {
-    const xored = decodeURIComponent(escape(atob(encrypted)))
-    return xorString(xored, key)
+    const key = deriveKey()
+    const binary = atob(encrypted)
+    const xored = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+      xored[i] = binary.charCodeAt(i)
+    }
+    const keyBytes = new TextEncoder().encode(key)
+    const dataBytes = new Uint8Array(xored.length)
+    for (let i = 0; i < xored.length; i++) {
+      dataBytes[i] = xored[i] ^ keyBytes[i % keyBytes.length]
+    }
+    return new TextDecoder().decode(dataBytes)
   } catch {
     return ''
   }
