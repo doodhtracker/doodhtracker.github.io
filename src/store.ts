@@ -1,22 +1,46 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { MilkEntry, User, Tab, Rates } from './types'
+import { hashPin, verifyPin, encryptData, decryptData } from './crypto'
+
+// ─── Encrypted Storage Adapter ───
+// Poora state JSON encrypt hoke localStorage mein save hota hai
+// DevTools khol ke koi bhi data nahi padh sakta
+
+const encryptedStorage = createJSONStorage(() => ({
+  getItem: (name: string) => {
+    const raw = localStorage.getItem(name)
+    if (!raw) return null
+    const decrypted = decryptData(raw)
+    if (decrypted && decrypted.startsWith('{')) return decrypted
+    return raw
+  },
+  setItem: (name: string, value: string) => {
+    localStorage.setItem(name, encryptData(value))
+  },
+  removeItem: (name: string) => localStorage.removeItem(name),
+}))
 
 interface StoreState {
   currentUser: string | null
   users: Record<string, User>
-  login: (username: string, pin: string) => boolean
-  signup: (username: string, pin: string) => boolean
-  resetPin: (username: string, newPin: string) => boolean
+  login: (username: string, pin: string) => Promise<boolean>
+  signup: (username: string, pin: string) => Promise<boolean>
+  resetPin: (username: string, newPin: string) => Promise<boolean>
   logout: () => void
+
   allEntries: Record<string, MilkEntry[]>
   nextEntryId: Record<string, number>
+
   allRates: Record<string, Rates>
   setRates: (gaay: number, bhains: number) => void
+
   allReminders: Record<string, ReminderConfig>
   setReminders: (config: ReminderConfig) => void
+
   activeTab: Tab
   setActiveTab: (t: Tab) => void
+
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
   importEntries: (entries: MilkEntry[]) => void
@@ -40,19 +64,30 @@ export const useStore = create<StoreState>()(
       allReminders: {},
       activeTab: 'home',
 
-      login: (username, pin) => {
+      login: async (username, pin) => {
         const key = username.toLowerCase().trim()
         const u = get().users[key]
-        if (!u || u.pin !== pin) return false
-        set({ currentUser: key })
-        return true
+        if (!u) return false
+        const ok = await verifyPin(pin, u.pin)
+        if (ok) {
+          set({ currentUser: key })
+          return true
+        }
+        if (u.pin === pin) {
+          const pinHash = await hashPin(pin)
+          set((s) => ({ users: { ...s.users, [key]: { ...s.users[key], pin: pinHash } } }))
+          set({ currentUser: key })
+          return true
+        }
+        return false
       },
 
-      signup: (username, pin) => {
+      signup: async (username, pin) => {
         const key = username.toLowerCase().trim()
         if (!key || get().users[key]) return false
+        const pinHash = await hashPin(pin)
         set((s) => ({
-          users: { ...s.users, [key]: { username: key, pin } },
+          users: { ...s.users, [key]: { username: key, pin: pinHash } },
           allEntries: { ...s.allEntries, [key]: [] },
           nextEntryId: { ...s.nextEntryId, [key]: 1 },
           allRates: { ...s.allRates, [key]: { gaay: 0, bhains: 0 } },
@@ -62,11 +97,12 @@ export const useStore = create<StoreState>()(
         return true
       },
 
-      resetPin: (username, newPin) => {
+      resetPin: async (username, newPin) => {
         const key = username.toLowerCase().trim()
         const u = get().users[key]
         if (!u) return false
-        set((s) => ({ users: { ...s.users, [key]: { ...s.users[key], pin: newPin } } }))
+        const pinHash = await hashPin(newPin)
+        set((s) => ({ users: { ...s.users, [key]: { ...s.users[key], pin: pinHash } } }))
         return true
       },
 
@@ -124,7 +160,10 @@ export const useStore = create<StoreState>()(
         }))
       },
     }),
-    { name: 'doodh-tracker-v4' },
+    {
+      name: 'doodh-tracker-v4',
+      storage: encryptedStorage,
+    },
   ),
 )
 

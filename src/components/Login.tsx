@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store'
-import { Milk, LogIn, UserPlus, KeyRound, ArrowLeft } from 'lucide-react'
+import { Milk, LogIn, UserPlus, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function Login() {
   const login = useStore((s) => s.login)
@@ -14,41 +14,60 @@ export default function Login() {
   const [confirmPin, setConfirmPin] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setSuccess('')
     if (!username.trim() || !pin.trim()) { setError('Naam aur PIN dono daalo'); return }
     if (pin.length < 4) { setError('PIN kam se kam 4 number ka ho'); return }
-    const ok = login(username, pin)
-    if (!ok) setError('Galat naam ya PIN. Sahi se daalo ya Forgot PIN dabao.')
+    setLoading(true)
+    try {
+      const ok = await login(username, pin)
+      if (!ok) setError('Galat naam ya PIN. Sahi se daalo ya Forgot PIN dabao.')
+    } catch {
+      setError('Kuch garbar ho gaya. Dobari try karo.')
+    }
+    setLoading(false)
   }
 
-  function handleSignup(e: React.FormEvent) {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setSuccess('')
     if (!username.trim() || !pin.trim()) { setError('Naam aur PIN dono daalo'); return }
     if (pin.length < 4) { setError('PIN kam se kam 4 number ka ho'); return }
-    const ok = signup(username, pin)
-    if (!ok) setError('Yeh naam pehle se hai. Login karo ya doosra naam chuno.')
+    setLoading(true)
+    try {
+      const ok = await signup(username, pin)
+      if (!ok) setError('Yeh naam pehle se hai. Login karo ya doosra naam chuno.')
+    } catch {
+      setError('Kuch garbar ho gaya. Dobari try karo.')
+    }
+    setLoading(false)
   }
 
-  function handleForgot(e: React.FormEvent) {
+  async function handleForgot(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setSuccess('')
     if (!username.trim()) { setError('Pehle apna naam daalo'); return }
     if (newPin.length < 4) { setError('Naya PIN kam se kam 4 number ka ho'); return }
     if (newPin !== confirmPin) { setError('Dono PIN match nahi karte'); return }
-    const ok = resetPin(username, newPin)
-    if (!ok) { setError('Yeh naam register nahi hai. Pehle naya account banao.'); return }
-    setSuccess('PIN badal gaya! Ab login karo.')
-    setMode('login')
-    setPin('')
-    setNewPin('')
-    setConfirmPin('')
+    setLoading(true)
+    try {
+      const ok = await resetPin(username, newPin)
+      if (!ok) { setError('Yeh naam register nahi hai. Pehle naya account banao.'); setLoading(false); return }
+      setSuccess('PIN badal gaya! Ab login karo.')
+      setMode('login')
+      setPin('')
+      setNewPin('')
+      setConfirmPin('')
+    } catch {
+      setError('Kuch garbar ho gaya. Dobari try karo.')
+    }
+    setLoading(false)
   }
 
   return (
@@ -63,11 +82,14 @@ export default function Login() {
             {mode === 'login' ? 'Apna account kholo' : mode === 'signup' ? 'Naya account banao' : 'PIN reset karo'}
           </p>
         </div>
+
         {success && (
           <div className="bg-green-900/50 border border-green-700 rounded-lg px-4 py-2 mb-3 text-green-300 text-sm text-center">
             {success}
           </div>
         )}
+
+        {/* LOGIN */}
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
@@ -81,11 +103,13 @@ export default function Login() {
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
             {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-            <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              <LogIn size={20} /> Login
+            <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />} {loading ? 'Check ho raha...' : 'Login'}
             </button>
           </form>
         )}
+
+        {/* SIGNUP */}
         {mode === 'signup' && (
           <form onSubmit={handleSignup} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
@@ -99,11 +123,13 @@ export default function Login() {
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
             {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-            <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              <UserPlus size={20} /> Account Banao
+            <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <UserPlus size={20} />} {loading ? 'Bana raha hoon...' : 'Account Banao'}
             </button>
           </form>
         )}
+
+        {/* FORGOT PIN */}
         {mode === 'forgot' && (
           <form onSubmit={handleForgot} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
@@ -122,11 +148,13 @@ export default function Login() {
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
             {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-            <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              <KeyRound size={20} /> PIN Badlo
+            <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <KeyRound size={20} />} {loading ? 'Badal raha hoon...' : 'PIN Badlo'}
             </button>
           </form>
         )}
+
+        {/* Navigation buttons */}
         <div className="mt-4 text-center space-y-2">
           {mode === 'forgot' ? (
             <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm flex items-center justify-center gap-1">
@@ -151,8 +179,9 @@ export default function Login() {
             </>
           )}
         </div>
+
         <p className="text-emerald-600 text-xs text-center mt-4">
-          🔒 Tumhara data sirf tumhare browser mein save hota hai. Koi dusra nahi dekh sakta.
+          🔒 Tumhara data encrypted hai. PIN aur entries dono secure — DevTools mein bhi nahi dikhega.
         </p>
       </div>
     </div>
