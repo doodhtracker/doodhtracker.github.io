@@ -1,10 +1,11 @@
 import { useStore, useEntries, useRates, todayStr, dayTotal, sessionTotal, fmtDate, fmtMonth, monthStr, monthTotal, monthPaisa, last7Days } from '../store'
-import { Sunrise, Sunset, Plus, TrendingUp, Wallet } from 'lucide-react'
+import { Sunrise, Sunset, Plus, TrendingUp, Wallet, Trash2 } from 'lucide-react'
 
 export default function HomeTab() {
   const entries = useEntries()
   const rates = useRates()
   const setActiveTab = useStore((s) => s.setActiveTab)
+  const removeEntry = useStore((s) => s.removeEntry)
   const today = todayStr()
   const tTotal = dayTotal(entries, today)
   const morning = sessionTotal(entries, today, 'morning')
@@ -93,11 +94,16 @@ export default function HomeTab() {
                     <p className="text-emerald-500 text-xs">{e.session === 'morning' ? '🌅 Subah' : '🌇 Shaam'}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-amber-300 font-bold">{e.liters} L</p>
-                  {(rates.gaay > 0 || rates.bhains > 0) && (
-                    <p className="text-green-400 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
-                  )}
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-amber-300 font-bold">{e.liters} L</p>
+                    {(rates.gaay > 0 || rates.bhains > 0) && (
+                      <p className="text-green-400 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                    )}
+                  </div>
+                  <button onClick={() => removeEntry(e.id)} className="text-red-400/70 hover:text-red-400 transition-colors" title="Delete">
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             ))}
