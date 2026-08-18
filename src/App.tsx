@@ -1,6 +1,7 @@
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import Login from './components/Login'
+import IndusAI from './components/IndusAI'
 import HomeTab from './tabs/HomeTab'
 import EntryTab from './tabs/EntryTab'
 import StatsTab from './tabs/StatsTab'
@@ -25,6 +26,7 @@ export default function App() {
         {activeTab === 'guide' && <GuideTab />}
       </main>
       <BottomNav />
+      <IndusAI />
     </div>
   )
 }
