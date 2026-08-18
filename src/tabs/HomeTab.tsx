@@ -19,8 +19,7 @@ export default function HomeTab() {
 
   return (
     <div className="space-y-4">
-      {/* ─── Today's Summary ─── */}
-      <div className="bg-gradient-to-br from-emerald-900/50 to-zinc-900/50 rounded-2xl p-4 border border-emerald-800/50">
+      <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-emerald-400 text-xs font-semibold uppercase tracking-wide">Aaj</p>
@@ -46,9 +45,7 @@ export default function HomeTab() {
           </div>
         </div>
       </div>
-
-      {/* ─── Monthly Summary ─── */}
-      <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800/50">
+      <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center gap-2 mb-3">
           <Wallet className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">{fmtMonth(mStr)} ka Hisaab</h3>
@@ -69,23 +66,17 @@ export default function HomeTab() {
           </div>
         )}
       </div>
-
-      {/* ─── 7-Day Quick Stats ─── */}
-      <div className="bg-emerald-900/40 rounded-xl p-3 border border-emerald-800/50 flex items-center gap-3">
+      <div className="bg-emerald-900/40 rounded-xl p-3 border border-emerald-800 flex items-center gap-3">
         <div className="bg-emerald-800 rounded-lg p-2"><TrendingUp className="text-emerald-300" size={20} /></div>
         <div>
           <p className="text-emerald-400 text-xs">Pichhle 7 din</p>
           <p className="text-white font-bold">{weekTotal} litre kul</p>
         </div>
       </div>
-
-      {/* ─── Quick Entry Button ─── */}
       <button onClick={() => setActiveTab('entry')}
-        className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-amber-900/30">
+        className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
         <Plus size={20} /> Naya Doodh Entry
       </button>
-
-      {/* ─── Today's Entries ─── */}
       <div>
         <h3 className="text-emerald-400 text-xs font-semibold uppercase mb-2">Aaj ki Entries</h3>
         {todayEntries.length === 0 ? (
@@ -93,7 +84,7 @@ export default function HomeTab() {
         ) : (
           <div className="space-y-2">
             {todayEntries.map((e) => (
-              <div key={e.id} className="bg-emerald-900/40 rounded-xl p-3 border border-emerald-800/50 flex items-center justify-between">
+              <div key={e.id} className="bg-emerald-900/40 rounded-xl p-3 border border-emerald-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{e.animalType === 'gaay' ? '🐄' : '🐃'}</span>
                   <div>
@@ -119,8 +110,6 @@ export default function HomeTab() {
           </div>
         )}
       </div>
-
-      {/* ─── Empty State ─── */}
       {entries.length === 0 && (
         <div className="bg-amber-950/40 border border-amber-800/30 rounded-xl p-4 text-center">
           <p className="text-amber-300 text-sm font-semibold mb-2">📋 Pehle Entry tab mein jao!</p>

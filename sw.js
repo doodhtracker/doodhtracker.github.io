@@ -1,6 +1,6 @@
 // Doodh Tracker Service Worker — FULL offline support
-// Ek baar online khola, phir hamesha offline chalega
-const CACHE_NAME = 'doodh-tracker-v6'
+// Eg baar online khola, phir hamesha offline chalega
+const CACHE_NAME = 'doodh-tracker-v7'
 
 // Install — skip waiting, take over immediately
 self.addEventListener('install', (event) => {
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
       '/',
       '/index.html',
       '/manifest.json',
-    ]).catch(() => {}))
+    ])).catch(() => {})
   )
 })
 
@@ -27,7 +27,7 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — CACHE FIRST for everything same-origin
 // Pehli baar online aaya toh sab cache ho jayega
-// Doosri baar se cache se chalega — internet nahi chahiye
+// Doosri baar cache se chalega — internet nahi chahiye
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
@@ -37,7 +37,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
-        // Cache mein hai — wahi de do, internet nahi chahiye
+        // Cache mein hai — wahin de do, internet nahi chahiye
         // Background mein update bhi karo (taaki online hone pe latest version mile)
         fetch(event.request).then((resp) => {
           if (resp && resp.ok) {
@@ -49,7 +49,7 @@ self.addEventListener('fetch', (event) => {
 
       // Cache mein nahi hai — network try karo
       return fetch(event.request).then((resp) => {
-        // Agar response ok hai toh cache kar lo (taaki next time offline chale)
+        // Agar response ok hai toh cache kar lo (taaki next time offline chal sake)
         if (resp && resp.ok && resp.type === 'basic') {
           const clone = resp.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
