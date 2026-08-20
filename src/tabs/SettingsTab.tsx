@@ -39,6 +39,8 @@ export default function SettingsTab() {
         Notification.requestPermission()
       }
       startReminders(config)
+    } else {
+      startReminders(config)
     }
     setRemSaved(true)
     setTimeout(() => setRemSaved(false), 1500)

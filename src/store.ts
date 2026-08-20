@@ -257,6 +257,13 @@ export function monthPaisa(entries: MilkEntry[], month: string, rates: Rates): n
   return calcPaisa(filterByMonth(entries, month), rates)
 }
 
+function csvEscape(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
+    return '"' + value.replace(/"/g, '""') + '"'
+  }
+  return value
+}
+
 export function exportCSV(entries: MilkEntry[], rates: Rates): string {
   const header = 'Date,Janwar,Naam,Session,Litres,Rate,Paisa,Note\n'
   const rows = entries.map((e) => {
@@ -264,7 +271,7 @@ export function exportCSV(entries: MilkEntry[], rates: Rates): string {
     const paisa = e.liters * rate
     const name = e.animalName || ''
     const note = (e.note || '').replace(/,/g, ';')
-    return `${e.date},${e.animalType === 'gaay' ? 'Gaay' : 'Bhains'},${name},${e.session === 'morning' ? 'Subah' : 'Shaam'},${e.liters},${rate},${paisa},${note}`
+    return [e.date, e.animalType === 'gaay' ? 'Gaay' : 'Bhains', name, e.session === 'morning' ? 'Subah' : 'Shaam', String(e.liters), String(rate), String(paisa), note].map(csvEscape).join(',')
   })
   return header + rows.join('\n')
 }
@@ -306,15 +313,20 @@ let reminderInterval: ReturnType<typeof setInterval> | null = null
 export function startReminders(config: ReminderConfig) {
   if (reminderInterval) clearInterval(reminderInterval)
   if (!config.morningEnabled && !config.eveningEnabled) return
+  let lastFired = ''
   reminderInterval = setInterval(() => {
     const now = new Date()
     const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    const key = `${hhmm}`
+    if (key === lastFired) return
     if (config.morningEnabled && hhmm === config.morningTime) {
+      lastFired = key
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('🥛 Doodh Tracker', { body: 'Subah ka doodh entry karo!' })
       }
     }
     if (config.eveningEnabled && hhmm === config.eveningTime) {
+      lastFired = key
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('🥛 Doodh Tracker', { body: 'Shaam ka doodh entry karo!' })
       }

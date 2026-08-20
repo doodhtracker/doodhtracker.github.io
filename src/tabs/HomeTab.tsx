@@ -35,13 +35,13 @@ export default function HomeTab() {
             <div className="flex items-center gap-1.5 text-amber-300 mb-1">
               <Sunrise size={16} /><span className="text-xs font-semibold">Subah</span>
             </div>
-            <p className="text-white text-xl font-bold">{morning} L</p>
+            <p className="text-white text-xl font-bold">{morning.toFixed(1)} L</p>
           </div>
           <div className="bg-orange-950/40 rounded-xl p-3 border border-orange-800/30">
             <div className="flex items-center gap-1.5 text-orange-300 mb-1">
               <Sunset size={16} /><span className="text-xs font-semibold">Shaam</span>
             </div>
-            <p className="text-white text-xl font-bold">{evening} L</p>
+            <p className="text-white text-xl font-bold">{evening.toFixed(1)} L</p>
           </div>
         </div>
       </div>
@@ -53,7 +53,7 @@ export default function HomeTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-emerald-950/40 rounded-xl p-3 text-center">
             <p className="text-emerald-400 text-xs">Kul Doodh</p>
-            <p className="text-white text-xl font-bold">{mTotal} L</p>
+            <p className="text-white text-xl font-bold">{mTotal.toFixed(1)} L</p>
           </div>
           <div className="bg-green-950/40 rounded-xl p-3 text-center">
             <p className="text-green-400 text-xs">Kul Paisa</p>
@@ -70,7 +70,7 @@ export default function HomeTab() {
         <div className="bg-emerald-800 rounded-lg p-2"><TrendingUp className="text-emerald-300" size={20} /></div>
         <div>
           <p className="text-emerald-400 text-xs">Pichhle 7 din</p>
-          <p className="text-white font-bold">{weekTotal} litre kul</p>
+          <p className="text-white font-bold">{weekTotal.toFixed(1)} litre kul</p>
         </div>
       </div>
       <button onClick={() => setActiveTab('entry')}
@@ -96,7 +96,7 @@ export default function HomeTab() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <p className="text-amber-300 font-bold">{e.liters} L</p>
+                    <p className="text-amber-300 font-bold">{e.liters.toFixed(1)} L</p>
                     {(rates.gaay > 0 || rates.bhains > 0) && (
                       <p className="text-green-400 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
                     )}

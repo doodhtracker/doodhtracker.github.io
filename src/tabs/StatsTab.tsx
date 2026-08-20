@@ -84,7 +84,7 @@ export default function StatsTab() {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Doodh</p><p className="text-amber-300 text-2xl font-bold">{grandTotal} L</p></div>
+        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Doodh</p><p className="text-amber-300 text-2xl font-bold">{grandTotal.toFixed(1)} L</p></div>
         <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Entries</p><p className="text-white text-2xl font-bold">{filtered.length}</p></div>
       </div>
       {(rates.gaay > 0 || rates.bhains > 0) && (
@@ -97,8 +97,8 @@ export default function StatsTab() {
         <Download size={20} /> CSV Export Karo
       </button>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-amber-950/40 rounded-xl p-3 border border-amber-800/30 text-center"><p className="text-amber-300 text-xs">🐄 Gaay</p><p className="text-white text-xl font-bold">{gaayTotal} L</p></div>
-        <div className="bg-blue-950/40 rounded-xl p-3 border border-blue-800/30 text-center"><p className="text-blue-300 text-xs">🐃 Bhains</p><p className="text-white text-xl font-bold">{bhainsTotal} L</p></div>
+        <div className="bg-amber-950/40 rounded-xl p-3 border border-amber-800/30 text-center"><p className="text-amber-300 text-xs">🐄 Gaay</p><p className="text-white text-xl font-bold">{gaayTotal.toFixed(1)} L</p></div>
+        <div className="bg-blue-950/40 rounded-xl p-3 border border-blue-800/30 text-center"><p className="text-blue-300 text-xs">🐃 Bhains</p><p className="text-white text-xl font-bold">{bhainsTotal.toFixed(1)} L</p></div>
       </div>
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800"><h3 className="text-white font-bold text-sm mb-3">📊 Pichhle 7 Din — Subah vs Shaam</h3><BarChart data={weekData} /></div>
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800"><h3 className="text-white font-bold text-sm mb-3">🥧 Gaay vs Bhains</h3><PieChart gaay={gaayTotal} bhains={bhainsTotal} /></div>
@@ -118,7 +118,7 @@ export default function StatsTab() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-amber-300 font-bold">{a.totalLiters} L</p>
+                  <p className="text-amber-300 font-bold">{a.totalLiters.toFixed(1)} L</p>
                   {(rates.gaay > 0 || rates.bhains > 0) && (
                     <p className="text-green-400 text-xs">₹{(a.totalLiters * (a.type === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
                   )}

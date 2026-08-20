@@ -21,10 +21,11 @@ export default function EntryTab() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!liters) return
+    const litersNum = parseFloat(liters)
+    if (!liters || isNaN(litersNum) || litersNum <= 0) return
     addEntry({
       date, animalType, animalName: animalName || undefined, session,
-      liters: parseFloat(liters), note: note || undefined,
+      liters: litersNum, note: note || undefined,
     })
     setLiters('')
     setNote('')
@@ -136,8 +137,8 @@ export default function EntryTab() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <p className="text-amber-300 font-bold">{e.liters} L</p>
-                    {currentRate > 0 && <p className="text-green-400 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>}
+                    <p className="text-amber-300 font-bold">{e.liters.toFixed(1)} L</p>
+                    {(e.animalType === 'gaay' ? rates.gaay : rates.bhains) > 0 && <p className="text-green-400 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>}
                   </div>
                   <button onClick={() => removeEntry(e.id)} className="text-red-400/70 hover:text-red-400 transition-colors">
                     <Trash2 size={16} />
