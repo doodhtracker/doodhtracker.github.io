@@ -6,6 +6,7 @@ import EntryTab from './tabs/EntryTab'
 import StatsTab from './tabs/StatsTab'
 import SettingsTab from './tabs/SettingsTab'
 import GuideTab from './tabs/GuideTab'
+import ReviewTab from './tabs/ReviewTab'
 import { useStore } from './store'
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         {activeTab === 'stats' && <StatsTab />}
         {activeTab === 'settings' && <SettingsTab />}
         {activeTab === 'guide' && <GuideTab />}
+        {activeTab === 'review' && <ReviewTab />}
       </main>
       <BottomNav />
     </div>

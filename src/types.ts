@@ -22,4 +22,14 @@ export interface Rates {
   bhains: number
 }
 
-export type Tab = 'home' | 'entry' | 'stats' | 'settings' | 'guide'
+// Review / feedback — koi bhi user apni problem ya suggestion likh sakta hai
+export interface Review {
+  id: number
+  name: string
+  rating: number
+  problem: string
+  suggestion: string
+  createdAt: number
+}
+
+export type Tab = 'home' | 'entry' | 'stats' | 'settings' | 'guide' | 'review'

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { MilkEntry, User, Tab, Rates } from './types'
+import type { MilkEntry, User, Tab, Rates, Review } from './types'
 import { hashPin, verifyPin, encryptData, decryptData } from './crypto'
 
 // ─── Encrypted Storage Adapter ───
@@ -46,6 +46,13 @@ interface StoreState {
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
   importEntries: (entries: MilkEntry[]) => void
+
+  // Reviews — device pe save hote hain (per-user nahi, taaki ek hi phone pe
+  // saare accounts ke reviews ek jagah dikhein)
+  reviews: Review[]
+  nextReviewId: number
+  addReview: (r: Omit<Review, 'id' | 'createdAt'>) => void
+  removeReview: (id: number) => void
 }
 
 export interface ReminderConfig {
@@ -65,6 +72,8 @@ export const useStore = create<StoreState>()(
       allRates: {},
       allReminders: {},
       activeTab: 'home',
+      reviews: [],
+      nextReviewId: 1,
 
       // LOGIN — async, PIN ko SHA-256 hash karke compare karta hai
       // Old plain-text PIN ke liye migration fallback bhi hai
@@ -147,6 +156,18 @@ export const useStore = create<StoreState>()(
         }))
       },
 
+      addReview: (r) => {
+        const id = get().nextReviewId || 1
+        set((s) => ({
+          reviews: [{ ...r, id, createdAt: Date.now() }, ...(s.reviews || [])],
+          nextReviewId: id + 1,
+        }))
+      },
+
+      removeReview: (id) => {
+        set((s) => ({ reviews: (s.reviews || []).filter((r) => r.id !== id) }))
+      },
+
       importEntries: (newEntries) => {
         const u = get().currentUser
         if (!u) return
@@ -185,6 +206,10 @@ export function useRates(): Rates {
   const currentUser = useStore((s) => s.currentUser)
   const allRates = useStore((s) => s.allRates)
   return currentUser ? (allRates[currentUser] || { gaay: 0, bhains: 0 }) : { gaay: 0, bhains: 0 }
+}
+
+export function useReviews(): Review[] {
+  return useStore((s) => s.reviews) || []
 }
 
 export function useReminders(): ReminderConfig {

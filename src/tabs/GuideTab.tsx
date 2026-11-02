@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Wallet, Bell, Download, Upload } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Wallet, Bell, Download, Upload, MessageSquare } from 'lucide-react'
 
 interface Section {
   title: string
@@ -151,6 +151,23 @@ const sections: Section[] = [
       '   • Pehle download ki hui CSV file select karo.',
       '   • Purana data wapas aa jayega!',
       '   • Home aur Stats tab mein check karo — saara data dikhega.',
+    ],
+  },
+  {
+    title: '📝 Review Tab — Apni problem aur suggestion bhejo',
+    icon: MessageSquare,
+    content: [
+      'Review tab mein tum apni problem ya suggestion likh sakte ho.',
+      '📝 Apna naam (optional): Naam likhna zaroori nahi — khaali chhod do to "Anonymous" chala jayega.',
+      '⭐ Rating: 5 star mein se jitne chahiye utne dabao (1 = kharab, 5 = badhiya). Dobara dabane par rating hat jayegi.',
+      'Kya problem hai?: Jo dikkat aa rahi hai woh likho (jaise "entry save nahi ho rahi").',
+      'Kya aur add hona chahiye?: Naya feature ka suggestion likho (jaise "mahine ka PDF report").',
+      '"Review Submit Karo" dabao — review is phone pe save ho jayega.',
+      'Neeche "Is device ke Reviews" mein tumhare saare reviews dikhte hain — galat likh gaya ho to 🗑️ se delete kar do.',
+      '📤 Review developer tak pahunchane ke liye "Email se bhejo" button dabao.',
+      '   • Tumhara email app khulega, review pehle se likha hua hoga.',
+      '   • Bas Send dabana hai — feedback developer ke paas chala jayega.',
+      'Yaad rakho: website static hai (koi server nahi), isliye review apne aap developer tak nahi jata — email se bhejna zaroori hai.',
     ],
   },
 ]
