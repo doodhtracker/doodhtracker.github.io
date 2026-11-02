@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store'
-import { Milk, LogIn, UserPlus, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
+import { LogIn, UserPlus, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
+import FarmerLogo from './FarmerLogo'
 
 export default function Login() {
   const login = useStore((s) => s.login)
@@ -74,9 +75,9 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <Milk className="text-amber-300" size={32} />
-            <h1 className="text-2xl font-bold text-white">🥛 Doodh Tracker</h1>
+          <div className="flex flex-col items-center gap-2 mb-2">
+            <FarmerLogo size={80} />
+            <h1 className="text-2xl font-bold text-white">Doodh Tracker</h1>
           </div>
           <p className="text-emerald-400 text-sm">
             {mode === 'login' ? 'Apna account kholo' : mode === 'signup' ? 'Naya account banao' : 'PIN reset karo'}
