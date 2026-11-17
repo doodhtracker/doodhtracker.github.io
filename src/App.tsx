@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import Login from './components/Login'
@@ -9,20 +8,10 @@ import SettingsTab from './tabs/SettingsTab'
 import GuideTab from './tabs/GuideTab'
 import ReviewTab from './tabs/ReviewTab'
 import { useStore } from './store'
-import { watchAuth, isCloudAvailable } from './cloud'
 
 export default function App() {
   const currentUser = useStore((s) => s.currentUser)
   const activeTab = useStore((s) => s.activeTab)
-
-  // Google session band ho jaye (ya expire ho) to cloudUser hata do,
-  // taaki UI galat "synced" na dikhaye. Data phone pe safe rehta hai.
-  useEffect(() => {
-    if (!isCloudAvailable()) return
-    return watchAuth((u) => {
-      if (!u) useStore.getState().setCloudUser(null)
-    })
-  }, [])
 
   if (!currentUser) return <Login />
 

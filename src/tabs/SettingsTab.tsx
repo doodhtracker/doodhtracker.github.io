@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useStore, useRates, useReminders, useEntries, exportCSV, downloadCSV, parseCSV, startReminders } from '../store'
-import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Cloud, CloudOff, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
-import { isCloudAvailable } from '../cloud'
+import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Mail, Copy, RotateCcw, FileDown } from 'lucide-react'
+import { packBackup, unpackBackup, backupSummary, type BackupData } from '../backup'
 
 export default function SettingsTab() {
   const rates = useRates()
@@ -12,65 +12,6 @@ export default function SettingsTab() {
   const logout = useStore((s) => s.logout)
   const importEntries = useStore((s) => s.importEntries)
   const currentUser = useStore((s) => s.currentUser)
-
-  const cloudUser = useStore((s) => s.cloudUser)
-  const cloudStatus = useStore((s) => s.cloudStatus)
-  const googleLogin = useStore((s) => s.googleLogin)
-  const googleLogout = useStore((s) => s.googleLogout)
-  const cloudPull = useStore((s) => s.cloudPull)
-  const cloudPush = useStore((s) => s.cloudPush)
-  const migrateLocalToCloud = useStore((s) => s.migrateLocalToCloud)
-  const users = useStore((s) => s.users)
-
-  const [cloudMsg, setCloudMsg] = useState('')
-  const [cloudBusy, setCloudBusy] = useState(false)
-  const [migrateFrom, setMigrateFrom] = useState('')
-
-  const localAccounts = Object.keys(users).filter((k) => !k.startsWith('g:'))
-
-  function flashCloud(msg: string) {
-    setCloudMsg(msg)
-    setTimeout(() => setCloudMsg(''), 4000)
-  }
-
-  async function handleCloudConnect() {
-    setCloudBusy(true)
-    const res = await googleLogin()
-    if (res.ok) flashCloud('✅ Google se jud gaya!')
-    else flashCloud('❌ ' + (res.error || 'Fail ho gaya'))
-    setCloudBusy(false)
-  }
-
-  async function handleCloudPush() {
-    setCloudBusy(true)
-    const res = await cloudPush()
-    flashCloud(res.ok ? '✅ Cloud pe save ho gaya!' : '❌ ' + (res.error || 'Fail'))
-    setCloudBusy(false)
-  }
-
-  async function handleCloudPull() {
-    setCloudBusy(true)
-    const res = await cloudPull()
-    flashCloud(res.ok ? '✅ Cloud se data aa gaya!' : '❌ ' + (res.error || 'Fail'))
-    setCloudBusy(false)
-  }
-
-  async function handleMigrate() {
-    if (!migrateFrom) {
-      flashCloud('❌ Pehle account chuno jiska data bhejna hai')
-      return
-    }
-    setCloudBusy(true)
-    const res = await migrateLocalToCloud(migrateFrom)
-    if (res.ok) flashCloud(`✅ ${res.count} entries cloud pe chali gayi!`)
-    else flashCloud('❌ ' + (res.error || 'Fail'))
-    setCloudBusy(false)
-  }
-
-  async function handleGoogleDisconnect() {
-    await googleLogout()
-    flashCloud('Google se disconnect ho gaya')
-  }
 
   const [gaayRate, setGaayRate] = useState(String(rates.gaay || ''))
   const [bhainsRate, setBhainsRate] = useState(String(rates.bhains || ''))
@@ -84,6 +25,88 @@ export default function SettingsTab() {
 
   const [importMsg, setImportMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // ─── Email backup ───
+  const restoreBackup = useStore((s) => s.restoreBackup)
+  const users = useStore((s) => s.users)
+  const remindersCfg = reminders
+  const [backupCode, setBackupCode] = useState('')
+  const [backupInfo, setBackupInfo] = useState('')
+  const [backupBusy, setBackupBusy] = useState(false)
+  const [pasteCode, setPasteCode] = useState('')
+  const [backupMsg, setBackupMsg] = useState('')
+
+  function flashBackup(msg: string) {
+    setBackupMsg(msg)
+    setTimeout(() => setBackupMsg(''), 5000)
+  }
+
+  async function makeBackup() {
+    setBackupBusy(true)
+    try {
+      const data: BackupData = {
+        v: 1,
+        app: 'doodh-tracker',
+        at: Date.now(),
+        username: currentUser ? users[currentUser]?.username || currentUser : '',
+        entries,
+        rates,
+        reminders: remindersCfg,
+        reviews: useStore.getState().reviews || [],
+      }
+      const code = await packBackup(data)
+      setBackupCode(code)
+      setBackupInfo(backupSummary(data))
+      flashBackup('✅ Backup code ban gaya — neeche se copy karo')
+    } catch {
+      flashBackup('❌ Backup banane mein dikkat aayi')
+    }
+    setBackupBusy(false)
+  }
+
+  async function copyBackup() {
+    try {
+      await navigator.clipboard.writeText(backupCode)
+      flashBackup('✅ Code copy ho gaya! Ab email/WhatsApp mein paste karo')
+    } catch {
+      flashBackup('❌ Copy nahi hua — code select karke manually copy karo')
+    }
+  }
+
+  function emailBackup() {
+    const subject = encodeURIComponent('Doodh Tracker Backup — sambhal ke rakho')
+    const body = encodeURIComponent(
+      'Ye mera Doodh Tracker ka backup hai.\n\nNaye phone pe: app kholo → Settings → Email Backup → neeche box mein code paste karo → Restore dabao.\n\n[ yahan code paste karo — app ke Settings se Copy kiya hua ]\n',
+    )
+    window.location.href = `mailto:?subject=${subject}&body=${body}`
+  }
+
+  function downloadBackupFile() {
+    const blob = new Blob([backupCode], { type: 'text/plain;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `doodh-tracker-backup-${new Date().toISOString().slice(0, 10)}.txt`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function doRestore() {
+    setBackupBusy(true)
+    try {
+      const data = await unpackBackup(pasteCode)
+      const res = restoreBackup(data)
+      if (res.ok) {
+        flashBackup(`✅ Restore ho gaya! Ab is account mein ${res.entries} entries hain`)
+        setPasteCode('')
+      } else {
+        flashBackup('❌ ' + (res.error || 'Restore fail ho gaya'))
+      }
+    } catch (e) {
+      flashBackup('❌ ' + (e instanceof Error ? e.message : 'Code galat hai'))
+    }
+    setBackupBusy(false)
+  }
 
   function saveRates() {
     setRates(parseFloat(gaayRate) || 0, parseFloat(bhainsRate) || 0)
@@ -231,90 +254,65 @@ export default function SettingsTab() {
         )}
       </div>
 
-      {/* ─── CLOUD SYNC ─── */}
+      {/* ─── EMAIL BACKUP ─── */}
       <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center gap-2 mb-3">
-          {cloudUser ? <Cloud className="text-amber-300" size={18} /> : <CloudOff className="text-emerald-500" size={18} />}
-          <h3 className="text-white font-bold text-sm">☁️ Cloud Sync (Google)</h3>
+          <Mail className="text-amber-300" size={18} />
+          <h3 className="text-white font-bold text-sm">📧 Email Backup</h3>
         </div>
+        <p className="text-emerald-500 text-xs mb-3 leading-relaxed">
+          Poora data ek code mein badal jata hai. Us code ko khud ko email kar lo.
+          Naye phone pe wahi code paste karke sab wapas le aao. Koi login nahi, koi setup nahi.
+        </p>
 
-        {!isCloudAvailable() && (
-          <p className="text-emerald-500 text-xs leading-relaxed">
-            Firebase setup baaki hai. Guide tab mein "Google login setup" section dekho — config bharte hi ye card chalu ho jayega.
-          </p>
-        )}
+        <button onClick={makeBackup} disabled={backupBusy || entries.length === 0}
+          className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-emerald-950 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+          <Mail size={18} /> {backupBusy ? 'Ban raha hai...' : 'Backup Code Banao'}
+        </button>
 
-        {isCloudAvailable() && !cloudUser && (
-          <>
-            <p className="text-emerald-500 text-xs mb-3 leading-relaxed">
-              Google se jud jao — tumhara doodh ka data cloud pe safe rahega aur har phone pe same dikhega.
-            </p>
-            <button onClick={handleCloudConnect} disabled={cloudBusy}
-              className="w-full bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-800 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
-              <span className="w-5 h-5 rounded-full bg-[#4285F4] text-white text-[12px] font-bold flex items-center justify-center leading-none">G</span>
-              {cloudBusy ? 'Jud raha hai...' : 'Google se connect karo'}
-            </button>
-          </>
-        )}
-
-        {isCloudAvailable() && cloudUser && (
-          <div className="space-y-3">
-            <div className="bg-emerald-950/40 rounded-lg p-3">
-              <p className="text-white text-sm font-semibold truncate">{cloudUser.name}</p>
-              <p className="text-emerald-500 text-xs truncate">{cloudUser.email}</p>
-              <p className="text-xs mt-1">
-                {cloudStatus === 'syncing' && <span className="text-amber-300">⏳ Sync ho raha...</span>}
-                {cloudStatus === 'synced' && <span className="text-green-400">✅ Cloud pe save hai</span>}
-                {cloudStatus === 'error' && <span className="text-red-400">⚠️ Sync fail — internet check karo</span>}
-                {cloudStatus === 'idle' && <span className="text-emerald-500">Abhi sync nahi hua</span>}
-              </p>
-            </div>
-
+        {backupCode && (
+          <div className="mt-3 space-y-2">
+            <p className="text-emerald-400 text-[11px]">{backupInfo} · {backupCode.length} characters</p>
+            <textarea readOnly value={backupCode} rows={4}
+              onFocus={(e) => e.currentTarget.select()}
+              className="w-full bg-emerald-950/60 text-emerald-300 border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono break-all resize-none" />
             <div className="grid grid-cols-2 gap-2">
-              <button onClick={handleCloudPush} disabled={cloudBusy}
-                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-                <ArrowUpFromLine size={14} /> Bhejo
+              <button onClick={copyBackup}
+                className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+                <Copy size={14} /> Copy karo
               </button>
-              <button onClick={handleCloudPull} disabled={cloudBusy}
-                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-                <ArrowDownToLine size={14} /> Laao
+              <button onClick={emailBackup}
+                className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+                <Mail size={14} /> Email kholo
               </button>
             </div>
-
-            {localAccounts.length > 0 && (
-              <div className="bg-amber-950/40 border border-amber-800/30 rounded-lg p-3">
-                <p className="text-amber-300 text-xs font-semibold mb-2">📦 Purana data cloud pe bhejo</p>
-                <p className="text-emerald-400 text-[11px] mb-2 leading-relaxed">
-                  Pehle PIN wale account ka data yahan se cloud mein daal sakte ho.
-                </p>
-                <div className="flex gap-2">
-                  <select value={migrateFrom} onChange={(e) => setMigrateFrom(e.target.value)}
-                    className="flex-1 bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400">
-                    <option value="">account chuno...</option>
-                    {localAccounts.map((k) => (
-                      <option key={k} value={k}>
-                        {users[k]?.username || k} ({(useStore.getState().allEntries[k] || []).length} entries)
-                      </option>
-                    ))}
-                  </select>
-                  <button onClick={handleMigrate} disabled={cloudBusy}
-                    className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 text-xs font-bold px-3 rounded-lg transition-colors">
-                    Bhejo
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <button onClick={handleGoogleDisconnect}
-              className="w-full text-red-400/80 hover:text-red-400 text-xs font-semibold py-1 transition-colors">
-              Google se disconnect karo
+            <button onClick={downloadBackupFile}
+              className="w-full text-emerald-400 hover:text-emerald-300 text-xs font-semibold py-1 flex items-center justify-center gap-1.5 transition-colors">
+              <FileDown size={13} /> Ya file mein download karo (.txt)
             </button>
+            <p className="text-emerald-600 text-[10px] text-center leading-relaxed">
+              Email app khulega — pehle "Copy karo" dabao, phir email mein code paste kar do.
+            </p>
           </div>
         )}
 
-        {cloudMsg && (
-          <div className={`mt-3 text-center text-sm ${cloudMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
-            {cloudMsg}
+        <div className="mt-4 pt-4 border-t border-emerald-800">
+          <p className="text-amber-300 text-xs font-semibold mb-2">🔄 Restore karo (naya phone)</p>
+          <textarea value={pasteCode} onChange={(e) => setPasteCode(e.target.value)} rows={4}
+            placeholder="Yahan backup code paste karo..."
+            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono resize-none focus:outline-none focus:border-amber-400 placeholder:text-emerald-700" />
+          <button onClick={doRestore} disabled={backupBusy || !pasteCode.trim()}
+            className="mt-2 w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+            <RotateCcw size={16} /> {backupBusy ? 'Restore ho raha...' : 'Restore Karo'}
+          </button>
+          <p className="text-emerald-600 text-[10px] mt-2 leading-relaxed">
+            Purani entries jodi jaati hain — jo pehle se hai wo dobara nahi aayegi, kuch delete nahi hota.
+          </p>
+        </div>
+
+        {backupMsg && (
+          <div className={`mt-3 text-center text-xs ${backupMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
+            {backupMsg}
           </div>
         )}
       </div>
