@@ -1,6 +1,6 @@
 // Doodh Tracker Service Worker — FULL offline support
 // Eg baar online khola, phir hamesha offline chalega
-const CACHE_NAME = 'doodh-tracker-v12'
+const CACHE_NAME = 'doodh-tracker-v13'
 
 // Install — skip waiting, take over immediately
 self.addEventListener('install', (event) => {

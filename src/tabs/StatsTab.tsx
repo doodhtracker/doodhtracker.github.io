@@ -45,7 +45,7 @@ export default function StatsTab() {
   const [toDate, setToDate] = useState(todayStr())
 
   if (entries.length === 0) {
-    return (<div className="bg-emerald-900/40 rounded-xl p-6 text-center border border-emerald-800"><p className="text-emerald-400 text-sm">📊 Abhi koi data nahi. Pehle entries add karo!</p></div>)
+    return (<div className="bg-emerald-900/40 rounded-xl p-6 text-center border border-emerald-800"><p className="text-emerald-300 text-sm">📊 Abhi koi data nahi. Pehle entries add karo!</p></div>)
   }
 
   const filtered = filterByDateRange(entries, fromDate, toDate)
@@ -69,27 +69,27 @@ export default function StatsTab() {
   return (
     <div className="space-y-4">
       <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800">
-        <div className="flex items-center gap-2 mb-2"><Filter className="text-emerald-400" size={16} /><h3 className="text-white font-bold text-sm">Date Filter</h3></div>
+        <div className="flex items-center gap-2 mb-2"><Filter className="text-emerald-300" size={16} /><h3 className="text-white font-bold text-sm">Date Filter</h3></div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-emerald-400 text-xs block mb-1">Se</label>
+            <label className="text-emerald-300 text-xs block mb-1">Se</label>
             <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
               className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400" />
           </div>
           <div>
-            <label className="text-emerald-400 text-xs block mb-1">Tak</label>
+            <label className="text-emerald-300 text-xs block mb-1">Tak</label>
             <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
               className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400" />
           </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Doodh</p><p className="text-amber-300 text-2xl font-bold">{grandTotal.toFixed(1)} L</p></div>
-        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-400 text-xs">Kul Entries</p><p className="text-white text-2xl font-bold">{filtered.length}</p></div>
+        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-300 text-xs">Kul Doodh</p><p className="text-amber-300 text-2xl font-bold">{grandTotal.toFixed(1)} L</p></div>
+        <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-800 text-center"><p className="text-emerald-300 text-xs">Kul Entries</p><p className="text-white text-2xl font-bold">{filtered.length}</p></div>
       </div>
       {(rates.gaay > 0 || rates.bhains > 0) && (
         <div className="bg-green-950/40 rounded-xl p-3 border border-green-800/30 text-center">
-          <p className="text-green-400 text-xs">💰 Kul Paisa ({fmtDate(fromDate)} - {fmtDate(toDate)})</p>
+          <p className="text-green-300 text-xs">💰 Kul Paisa ({fmtDate(fromDate)} - {fmtDate(toDate)})</p>
           <p className="text-green-300 text-2xl font-bold">₹{totalPaisa.toFixed(2)}</p>
         </div>
       )}
@@ -105,7 +105,7 @@ export default function StatsTab() {
       <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800">
         <h3 className="text-white font-bold text-sm mb-3">🐄 Janwar-wise Hisaab</h3>
         {animals.length === 0 ? (
-          <p className="text-emerald-600 text-sm text-center py-2">Koi data nahi.</p>
+          <p className="text-emerald-300 text-sm text-center py-2">Koi data nahi.</p>
         ) : (
           <div className="space-y-2">
             {animals.map((a, i) => (
@@ -114,13 +114,13 @@ export default function StatsTab() {
                   <span className="text-lg">{a.type === 'gaay' ? '🐄' : '🐃'}</span>
                   <div>
                     <p className="text-white text-sm font-semibold">{a.name}</p>
-                    <p className="text-emerald-500 text-xs">{a.entries} entries</p>
+                    <p className="text-emerald-300 text-xs">{a.entries} entries</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-amber-300 font-bold">{a.totalLiters.toFixed(1)} L</p>
                   {(rates.gaay > 0 || rates.bhains > 0) && (
-                    <p className="text-green-400 text-xs">₹{(a.totalLiters * (a.type === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                    <p className="text-green-300 text-xs">₹{(a.totalLiters * (a.type === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
                   )}
                 </div>
               </div>

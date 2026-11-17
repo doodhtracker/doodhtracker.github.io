@@ -26,7 +26,7 @@ export default function ReviewTab() {
   const [error, setError] = useState('')
 
   const inputCls =
-    'w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-emerald-700'
+    'w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-emerald-500'
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -76,13 +76,13 @@ export default function ReviewTab() {
           <MessageSquare className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">📝 Apna Review Likho</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3">
+        <p className="text-emerald-300 text-xs mb-3">
           Koi problem aa rahi hai? Kya aur add hona chahiye? Yahan likho.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="text-emerald-400 text-xs font-semibold block mb-1">Tumhara naam (optional)</label>
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">Tumhara naam (optional)</label>
             <input
               type="text"
               value={name}
@@ -93,7 +93,7 @@ export default function ReviewTab() {
           </div>
 
           <div>
-            <label className="text-emerald-400 text-xs font-semibold block mb-1">Rating</label>
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">Rating</label>
             <div className="flex items-center gap-1.5">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
@@ -105,7 +105,7 @@ export default function ReviewTab() {
                 >
                   <Star
                     size={26}
-                    className={n <= rating ? 'text-amber-400' : 'text-emerald-700'}
+                    className={n <= rating ? 'text-amber-400' : 'text-emerald-300'}
                     fill={n <= rating ? 'currentColor' : 'none'}
                   />
                 </button>
@@ -115,7 +115,7 @@ export default function ReviewTab() {
           </div>
 
           <div>
-            <label className="text-emerald-400 text-xs font-semibold block mb-1">
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">
               Kya problem hai?
             </label>
             <textarea
@@ -128,7 +128,7 @@ export default function ReviewTab() {
           </div>
 
           <div>
-            <label className="text-emerald-400 text-xs font-semibold block mb-1">
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">
               Kya aur add hona chahiye?
             </label>
             <textarea
@@ -156,7 +156,7 @@ export default function ReviewTab() {
           <Mail className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">📤 Review Developer ko Bhejo</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3">
+        <p className="text-emerald-300 text-xs mb-3">
           Review is phone pe save hota hai. Developer tak pahunchane ke liye neeche wala button dabao —
           tumhara email app khulega, review pehle se likha hoga, bas Send dabana hai.
         </p>
@@ -170,13 +170,13 @@ export default function ReviewTab() {
       </div>
 
       <div>
-        <h3 className="text-emerald-400 text-xs font-semibold uppercase mb-2">
+        <h3 className="text-emerald-300 text-xs font-semibold uppercase mb-2">
           Is device ke Reviews ({reviews.length})
         </h3>
         {reviews.length === 0 ? (
           <div className="bg-emerald-900/40 rounded-xl p-5 text-center border border-emerald-800">
-            <Lightbulb className="text-emerald-600 mx-auto mb-2" size={22} />
-            <p className="text-emerald-500 text-sm">
+            <Lightbulb className="text-emerald-300 mx-auto mb-2" size={22} />
+            <p className="text-emerald-300 text-sm">
               Abhi koi review nahi. Upar form bhar ke pehla review likho!
             </p>
           </div>
@@ -187,7 +187,7 @@ export default function ReviewTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-white text-sm font-semibold truncate">{r.name}</p>
-                    <p className="text-emerald-600 text-[11px]">{fmtWhen(r.createdAt)}</p>
+                    <p className="text-emerald-300 text-[11px]">{fmtWhen(r.createdAt)}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {r.rating > 0 && (
@@ -198,7 +198,7 @@ export default function ReviewTab() {
                     )}
                     <button
                       onClick={() => removeReview(r.id)}
-                      className="text-red-400/70 hover:text-red-400 transition-colors ml-1"
+                      className="text-red-300 hover:text-red-400 transition-colors ml-1"
                       title="Delete"
                     >
                       <Trash2 size={15} />
@@ -207,13 +207,13 @@ export default function ReviewTab() {
                 </div>
                 {r.problem && (
                   <p className="text-emerald-300 text-xs mt-2">
-                    <span className="text-emerald-500 font-semibold">Problem: </span>
+                    <span className="text-emerald-300 font-semibold">Problem: </span>
                     {r.problem}
                   </p>
                 )}
                 {r.suggestion && (
                   <p className="text-emerald-300 text-xs mt-1">
-                    <span className="text-emerald-500 font-semibold">Suggestion: </span>
+                    <span className="text-emerald-300 font-semibold">Suggestion: </span>
                     {r.suggestion}
                   </p>
                 )}

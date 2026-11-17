@@ -79,7 +79,7 @@ export default function Login() {
             <FarmerLogo size={80} />
             <h1 className="text-2xl font-bold text-white">Doodh Tracker</h1>
           </div>
-          <p className="text-emerald-400 text-sm">
+          <p className="text-emerald-300 text-sm">
             {mode === 'login' ? 'Apna account kholo' : mode === 'signup' ? 'Naya account banao' : 'PIN reset karo'}
           </p>
         </div>
@@ -94,12 +94,12 @@ export default function Login() {
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">Naam</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naam</label>
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="jaise: Ramesh"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
             </div>
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">PIN</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">PIN</label>
               <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
@@ -114,12 +114,12 @@ export default function Login() {
         {mode === 'signup' && (
           <form onSubmit={handleSignup} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">Naam</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naam</label>
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="jaise: Ramesh"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
             </div>
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">Naya PIN (4 digit)</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naya PIN (4 digit)</label>
               <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
@@ -134,17 +134,17 @@ export default function Login() {
         {mode === 'forgot' && (
           <form onSubmit={handleForgot} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">Apna Naam</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">Apna Naam</label>
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="jo account mein hai"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
             </div>
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">Naya PIN (4 digit)</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naya PIN (4 digit)</label>
               <input type="password" inputMode="numeric" maxLength={6} value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
             <div>
-              <label className="text-emerald-400 text-xs font-semibold block mb-1">Naya PIN Dobara</label>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naya PIN Dobara</label>
               <input type="password" inputMode="numeric" maxLength={6} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
                 className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
             </div>
@@ -168,7 +168,7 @@ export default function Login() {
                   <button onClick={() => { setMode('signup'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm block">
                     Naya account banana hai? Yahan dabao
                   </button>
-                  <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} className="text-emerald-400 underline text-sm block">
+                  <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} className="text-emerald-300 underline text-sm block">
                     PIN bhul gaye? Reset karo
                   </button>
                 </>
@@ -181,7 +181,7 @@ export default function Login() {
           )}
         </div>
 
-        <p className="text-emerald-600 text-xs text-center mt-4">
+        <p className="text-emerald-300 text-xs text-center mt-4">
           🔒 Tumhara data encrypted hai. PIN aur entries dono secure — DevTools mein bhi nahi dikhega.
         </p>
       </div>

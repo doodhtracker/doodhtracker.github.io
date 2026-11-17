@@ -25,7 +25,7 @@ export default function BottomNav() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors ${
-                isActive ? 'text-amber-400' : 'text-emerald-600'
+                isActive ? 'text-amber-400' : 'text-emerald-400'
               }`}
             >
               <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />

@@ -22,12 +22,12 @@ export default function HomeTab() {
       <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-emerald-400 text-xs font-semibold uppercase tracking-wide">Aaj</p>
+            <p className="text-emerald-300 text-xs font-semibold uppercase tracking-wide">Aaj</p>
             <p className="text-white text-lg font-bold">{fmtDate(today)}</p>
           </div>
           <div className="text-right">
             <p className="text-amber-300 text-3xl font-bold">{tTotal.toFixed(1)}</p>
-            <p className="text-emerald-400 text-xs">litre aaj</p>
+            <p className="text-emerald-300 text-xs">litre aaj</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -52,16 +52,16 @@ export default function HomeTab() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-emerald-950/40 rounded-xl p-3 text-center">
-            <p className="text-emerald-400 text-xs">Kul Doodh</p>
+            <p className="text-emerald-300 text-xs">Kul Doodh</p>
             <p className="text-white text-xl font-bold">{mTotal.toFixed(1)} L</p>
           </div>
           <div className="bg-green-950/40 rounded-xl p-3 text-center">
-            <p className="text-green-400 text-xs">Kul Paisa</p>
+            <p className="text-green-300 text-xs">Kul Paisa</p>
             <p className="text-green-300 text-xl font-bold">₹{mPaisa.toFixed(0)}</p>
           </div>
         </div>
         {(rates.gaay > 0 || rates.bhains > 0) && (
-          <div className="mt-2 text-center text-xs text-emerald-500">
+          <div className="mt-2 text-center text-xs text-emerald-300">
             Rate: 🐄 ₹{rates.gaay}/L · 🐃 ₹{rates.bhains}/L
           </div>
         )}
@@ -69,7 +69,7 @@ export default function HomeTab() {
       <div className="bg-emerald-900/40 rounded-xl p-3 border border-emerald-800 flex items-center gap-3">
         <div className="bg-emerald-800 rounded-lg p-2"><TrendingUp className="text-emerald-300" size={20} /></div>
         <div>
-          <p className="text-emerald-400 text-xs">Pichhle 7 din</p>
+          <p className="text-emerald-300 text-xs">Pichhle 7 din</p>
           <p className="text-white font-bold">{weekTotal.toFixed(1)} litre kul</p>
         </div>
       </div>
@@ -78,9 +78,9 @@ export default function HomeTab() {
         <Plus size={20} /> Naya Doodh Entry
       </button>
       <div>
-        <h3 className="text-emerald-400 text-xs font-semibold uppercase mb-2">Aaj ki Entries</h3>
+        <h3 className="text-emerald-300 text-xs font-semibold uppercase mb-2">Aaj ki Entries</h3>
         {todayEntries.length === 0 ? (
-          <p className="text-emerald-600 text-sm text-center py-4">Aaj koi entry nahi. Upar button dabao!</p>
+          <p className="text-emerald-300 text-sm text-center py-4">Aaj koi entry nahi. Upar button dabao!</p>
         ) : (
           <div className="space-y-2">
             {todayEntries.map((e) => (
@@ -91,17 +91,17 @@ export default function HomeTab() {
                     <p className="text-white text-sm font-semibold">
                       {e.animalType === 'gaay' ? 'Gaay' : 'Bhains'}{e.animalName ? ` · ${e.animalName}` : ''}
                     </p>
-                    <p className="text-emerald-500 text-xs">{e.session === 'morning' ? '🌅 Subah' : '🌇 Shaam'}</p>
+                    <p className="text-emerald-300 text-xs">{e.session === 'morning' ? '🌅 Subah' : '🌇 Shaam'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <p className="text-amber-300 font-bold">{e.liters.toFixed(1)} L</p>
                     {(rates.gaay > 0 || rates.bhains > 0) && (
-                      <p className="text-green-400 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                      <p className="text-green-300 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
                     )}
                   </div>
-                  <button onClick={() => removeEntry(e.id)} className="text-red-400/70 hover:text-red-400 transition-colors" title="Delete">
+                  <button onClick={() => removeEntry(e.id)} className="text-red-300 hover:text-red-400 transition-colors" title="Delete">
                     <Trash2 size={16} />
                   </button>
                 </div>

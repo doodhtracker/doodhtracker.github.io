@@ -11,8 +11,8 @@ export default function Header() {
         <FarmerLogo size={36} />
         <h1 className="text-lg font-bold text-white">Doodh Tracker</h1>
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-emerald-400 text-xs font-semibold bg-emerald-900/60 px-2 py-1 rounded-full">{currentUser}</span>
-          <button onClick={logout} className="text-red-400/70 hover:text-red-400 transition-colors" title="Logout">
+          <span className="text-emerald-50 text-xs font-semibold bg-emerald-800/80 border border-emerald-600/60 px-2 py-1 rounded-full">{currentUser}</span>
+          <button onClick={logout} className="text-red-300 hover:text-red-400 transition-colors" title="Logout">
             <LogOut size={18} />
           </button>
         </div>

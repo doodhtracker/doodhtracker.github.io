@@ -231,16 +231,16 @@ export default function SettingsTab() {
           <Wallet className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">💰 Rate Set Karo</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3">Litres ka rate daalo, taaki paisa ka hisaab bhi automatic chale</p>
+        <p className="text-emerald-300 text-xs mb-3">Litres ka rate daalo, taaki paisa ka hisaab bhi automatic chale</p>
         <div className="space-y-3">
           <div>
-            <label className="text-emerald-400 text-xs font-semibold block mb-1">🐄 Gaay ka rate (₹/litre)</label>
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">🐄 Gaay ka rate (₹/litre)</label>
             <input type="number" step="0.5" min="0" value={gaayRate} onChange={(e) => setGaayRate(e.target.value)}
               placeholder="jaise 40"
               className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
           </div>
           <div>
-            <label className="text-emerald-400 text-xs font-semibold block mb-1">🐃 Bhains ka rate (₹/litre)</label>
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">🐃 Bhains ka rate (₹/litre)</label>
             <input type="number" step="0.5" min="0" value={bhainsRate} onChange={(e) => setBhainsRate(e.target.value)}
               placeholder="jaise 45"
               className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
@@ -257,7 +257,7 @@ export default function SettingsTab() {
           <Bell className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">🔔 Reminder Set Karo</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3">Subah/shaam entry karne ka reminder milega</p>
+        <p className="text-emerald-300 text-xs mb-3">Subah/shaam entry karne ka reminder milega</p>
         <div className="space-y-3">
           <div className="flex items-center justify-between bg-emerald-950/40 rounded-lg p-3">
             <div className="flex items-center gap-2">
@@ -291,7 +291,7 @@ export default function SettingsTab() {
             className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-2.5 rounded-lg transition-colors">
             {remSaved ? '✅ Save ho gaya!' : 'Reminder Save Karo'}
           </button>
-          <p className="text-emerald-600 text-xs text-center">⚠️ Reminder tab kaam karega jab website browser mein khuli hogi</p>
+          <p className="text-emerald-300 text-xs text-center">⚠️ Reminder tab kaam karega jab website browser mein khuli hogi</p>
         </div>
       </div>
 
@@ -300,7 +300,7 @@ export default function SettingsTab() {
           <Download className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">📥 Data Export (Backup)</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3">Apna saara doodh data CSV file mein nikal lo — backup ke liye</p>
+        <p className="text-emerald-300 text-xs mb-3">Apna saara doodh data CSV file mein nikal lo — backup ke liye</p>
         <button onClick={exportAll} disabled={entries.length === 0}
           className="w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
           <Download size={18} /> CSV Download Karo ({entries.length} entries)
@@ -312,7 +312,7 @@ export default function SettingsTab() {
           <Upload className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">📤 Data Import (Purana Data Wapas Lau)</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3">Pehle export ki hui CSV file upload karo — purana data wapas aa jayega. Duplicate entries automatic skip honge.</p>
+        <p className="text-emerald-300 text-xs mb-3">Pehle export ki hui CSV file upload karo — purana data wapas aa jayega. Duplicate entries automatic skip honge.</p>
         <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
         <button onClick={() => fileRef.current?.click()}
           className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
@@ -331,24 +331,24 @@ export default function SettingsTab() {
           <Mail className="text-amber-300" size={18} />
           <h3 className="text-white font-bold text-sm">📧 Email Backup</h3>
         </div>
-        <p className="text-emerald-500 text-xs mb-3 leading-relaxed">
+        <p className="text-emerald-300 text-xs mb-3 leading-relaxed">
           Email ID daalo aur Send dabao — backup code apne aap email mein bhar jayega.
           Naye phone pe usi email se code copy karke restore kar lena.
         </p>
 
         {backupCode ? (
-          <p className="text-emerald-400 text-[11px] mb-2">{backupInfo} · code ready ✅</p>
+          <p className="text-emerald-300 text-[11px] mb-2">{backupInfo} · code ready ✅</p>
         ) : (
-          <p className="text-emerald-600 text-[11px] mb-2">Code ban raha hai...</p>
+          <p className="text-emerald-300 text-[11px] mb-2">Code ban raha hai...</p>
         )}
 
-        <label className="text-emerald-400 text-xs font-semibold block mb-1">Kisko bhejna hai?</label>
+        <label className="text-emerald-300 text-xs font-semibold block mb-1">Kisko bhejna hai?</label>
         <input
           type="email"
           value={toEmail}
           onChange={(e) => setToEmail(e.target.value)}
           placeholder="tumhara-email@gmail.com"
-          className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-emerald-700"
+          className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-emerald-500"
         />
 
         <button
@@ -383,10 +383,10 @@ export default function SettingsTab() {
         )}
 
         <div className="flex items-center justify-center gap-4 mt-2">
-          <button onClick={downloadBackupFile} className="text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors">
+          <button onClick={downloadBackupFile} className="text-emerald-300 hover:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors">
             <FileDown size={12} /> .txt download
           </button>
-          <button onClick={copyBackup} className="text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors">
+          <button onClick={copyBackup} className="text-emerald-300 hover:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors">
             <Copy size={12} /> code copy
           </button>
         </div>
@@ -398,7 +398,7 @@ export default function SettingsTab() {
             onChange={(e) => setPasteCode(e.target.value)}
             rows={3}
             placeholder="Backup code yahan paste karo..."
-            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono resize-none focus:outline-none focus:border-amber-400 placeholder:text-emerald-700"
+            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono resize-none focus:outline-none focus:border-amber-400 placeholder:text-emerald-500"
           />
           <button
             onClick={doRestore}
@@ -411,12 +411,12 @@ export default function SettingsTab() {
           <input ref={restoreFileRef} type="file" accept=".txt,text/plain" onChange={handleRestoreFile} className="hidden" />
           <button
             onClick={() => restoreFileRef.current?.click()}
-            className="mt-2 w-full text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold py-1 flex items-center justify-center gap-1.5 transition-colors"
+            className="mt-2 w-full text-emerald-300 hover:text-emerald-300 text-[11px] font-semibold py-1 flex items-center justify-center gap-1.5 transition-colors"
           >
             <Upload size={13} /> ya backup .txt file se restore karo
           </button>
 
-          <p className="text-emerald-600 text-[10px] mt-1 leading-relaxed">
+          <p className="text-emerald-300 text-[10px] mt-1 leading-relaxed">
             Purani entries jodi jaati hain — duplicate skip, kuch delete nahi hota.
           </p>
         </div>
@@ -438,7 +438,7 @@ export default function SettingsTab() {
             <Milk className="text-amber-300" size={20} />
             <div>
               <p className="text-white text-sm font-semibold">{currentUser}</p>
-              <p className="text-emerald-500 text-xs">{entries.length} entries · Logged in</p>
+              <p className="text-emerald-300 text-xs">{entries.length} entries · Logged in</p>
             </div>
           </div>
           <button onClick={logout} className="bg-red-900/40 hover:bg-red-900/60 text-red-300 font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
@@ -447,7 +447,7 @@ export default function SettingsTab() {
         </div>
       </div>
 
-      <p className="text-emerald-600 text-xs text-center pb-2">🥛 Doodh Tracker · Made with ❤️</p>
+      <p className="text-emerald-300 text-xs text-center pb-2">🥛 Doodh Tracker · Made with ❤️</p>
     </div>
   )
 }

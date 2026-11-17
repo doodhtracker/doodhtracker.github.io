@@ -211,7 +211,7 @@ export default function GuideTab() {
       <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800 text-center">
         <BookOpen className="text-amber-300 mx-auto mb-2" size={32} />
         <h2 className="text-white text-lg font-bold">📖 Doodh Tracker Guide</h2>
-        <p className="text-emerald-400 text-sm mt-1">Har cheez Hindi mein detail se samjha hua — niche se padho</p>
+        <p className="text-emerald-300 text-sm mt-1">Har cheez Hindi mein detail se samjha hua — niche se padho</p>
       </div>
 
       {sections.map((s, i) => {
@@ -225,12 +225,12 @@ export default function GuideTab() {
             >
               <Icon className="text-amber-300 shrink-0" size={20} />
               <span className="text-white text-sm font-semibold flex-1">{s.title}</span>
-              {isOpen ? <ChevronUp className="text-emerald-400" size={18} /> : <ChevronDown className="text-emerald-400" size={18} />}
+              {isOpen ? <ChevronUp className="text-emerald-300" size={18} /> : <ChevronDown className="text-emerald-300" size={18} />}
             </button>
             {isOpen && (
               <div className="px-4 pb-4 space-y-2">
                 {s.content.map((line, j) => (
-                  <p key={j} className={`text-sm ${line.startsWith('   ') ? 'text-emerald-400 pl-4' : line === '' ? 'h-2' : 'text-emerald-300'}`}>
+                  <p key={j} className={`text-sm ${line.startsWith('   ') ? 'text-emerald-300 pl-4' : line === '' ? 'h-2' : 'text-emerald-300'}`}>
                     {line || '\u00A0'}
                   </p>
                 ))}
