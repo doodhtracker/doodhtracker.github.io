@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useStore, useRates, useReminders, useEntries, exportCSV, downloadCSV, parseCSV, startReminders } from '../store'
-import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Mail, Copy, RotateCcw, FileDown } from 'lucide-react'
+import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Mail, Copy, RotateCcw, FileDown, Share2, FileText } from 'lucide-react'
 import { packBackup, unpackBackup, backupSummary, type BackupData } from '../backup'
 
 export default function SettingsTab() {
@@ -29,56 +29,93 @@ export default function SettingsTab() {
   // ─── Email backup ───
   const restoreBackup = useStore((s) => s.restoreBackup)
   const users = useStore((s) => s.users)
-  const remindersCfg = reminders
+  const [toEmail, setToEmail] = useState('')
   const [backupCode, setBackupCode] = useState('')
   const [backupInfo, setBackupInfo] = useState('')
   const [backupBusy, setBackupBusy] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
   const [backupMsg, setBackupMsg] = useState('')
+  const restoreFileRef = useRef<HTMLInputElement>(null)
 
   function flashBackup(msg: string) {
     setBackupMsg(msg)
-    setTimeout(() => setBackupMsg(''), 5000)
+    setTimeout(() => setBackupMsg(''), 6000)
   }
 
-  async function makeBackup() {
-    setBackupBusy(true)
-    try {
-      const data: BackupData = {
-        v: 1,
-        app: 'doodh-tracker',
-        at: Date.now(),
-        username: currentUser ? users[currentUser]?.username || currentUser : '',
-        entries,
-        rates,
-        reminders: remindersCfg,
-        reviews: useStore.getState().reviews || [],
-      }
-      const code = await packBackup(data)
-      setBackupCode(code)
-      setBackupInfo(backupSummary(data))
-      flashBackup('✅ Backup code ban gaya — neeche se copy karo')
-    } catch {
-      flashBackup('❌ Backup banane mein dikkat aayi')
+  // Data badle to backup code apne aap naya ban jata hai
+  useEffect(() => {
+    let cancelled = false
+    if (!currentUser) return
+    const data: BackupData = {
+      v: 1,
+      app: 'doodh-tracker',
+      at: Date.now(),
+      username: users[currentUser]?.username || currentUser,
+      entries,
+      rates,
+      reminders,
+      reviews: useStore.getState().reviews || [],
     }
-    setBackupBusy(false)
+    packBackup(data)
+      .then((code) => {
+        if (cancelled) return
+        setBackupCode(code)
+        setBackupInfo(backupSummary(data))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [currentUser, entries, rates, reminders, users])
+
+  function emailValid(v: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+  }
+
+  function sendBackupEmail() {
+    if (!emailValid(toEmail)) {
+      flashBackup('❌ Sahi email ID daalo (jaise naam@gmail.com)')
+      return
+    }
+    if (!backupCode) {
+      flashBackup('❌ Backup ban raha hai — ek second baad try karo')
+      return
+    }
+    const subject = 'Doodh Tracker Backup — sambhal ke rakho'
+    const body =
+      'Ye mera Doodh Tracker ka backup hai.\n\n' +
+      'Naye phone pe: app kholo → Settings → Email Backup → Restore box mein neeche wala code paste karo → Restore dabao.\n\n' +
+      '----- CODE START -----\n' +
+      backupCode +
+      '\n----- CODE END -----\n'
+    window.location.href =
+      'mailto:' + encodeURIComponent(toEmail.trim()) +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body)
+    flashBackup('📧 Email app khul raha hai — bas Send dabao')
   }
 
   async function copyBackup() {
     try {
       await navigator.clipboard.writeText(backupCode)
-      flashBackup('✅ Code copy ho gaya! Ab email/WhatsApp mein paste karo')
+      flashBackup('✅ Code copy ho gaya')
     } catch {
       flashBackup('❌ Copy nahi hua — code select karke manually copy karo')
     }
   }
 
-  function emailBackup() {
-    const subject = encodeURIComponent('Doodh Tracker Backup — sambhal ke rakho')
-    const body = encodeURIComponent(
-      'Ye mera Doodh Tracker ka backup hai.\n\nNaye phone pe: app kholo → Settings → Email Backup → neeche box mein code paste karo → Restore dabao.\n\n[ yahan code paste karo — app ke Settings se Copy kiya hua ]\n',
-    )
-    window.location.href = `mailto:?subject=${subject}&body=${body}`
+  async function shareBackup() {
+    if (!backupCode) return
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
+    if (nav.share) {
+      try {
+        await nav.share({ title: 'Doodh Tracker Backup', text: 'Doodh Tracker backup code:\n\n' + backupCode })
+        return
+      } catch {
+        return
+      }
+    }
+    await copyBackup()
   }
 
   function downloadBackupFile() {
@@ -91,10 +128,29 @@ export default function SettingsTab() {
     URL.revokeObjectURL(url)
   }
 
-  async function doRestore() {
+  async function shareBackupFile() {
+    if (!backupCode) return
+    const fileName = `doodh-tracker-backup-${new Date().toISOString().slice(0, 10)}.txt`
+    const file = new File([backupCode], fileName, { type: 'text/plain' })
+    const nav = navigator as Navigator & {
+      canShare?: (d: ShareData) => boolean
+      share?: (d: ShareData) => Promise<void>
+    }
+    if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
+      try {
+        await nav.share({ files: [file], title: 'Doodh Tracker Backup' })
+        return
+      } catch {
+        return
+      }
+    }
+    downloadBackupFile()
+  }
+
+  async function restoreFromText(text: string) {
     setBackupBusy(true)
     try {
-      const data = await unpackBackup(pasteCode)
+      const data = await unpackBackup(text)
       const res = restoreBackup(data)
       if (res.ok) {
         flashBackup(`✅ Restore ho gaya! Ab is account mein ${res.entries} entries hain`)
@@ -106,6 +162,21 @@ export default function SettingsTab() {
       flashBackup('❌ ' + (e instanceof Error ? e.message : 'Code galat hai'))
     }
     setBackupBusy(false)
+  }
+
+  async function doRestore() {
+    await restoreFromText(pasteCode)
+  }
+
+  function handleRestoreFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      void restoreFromText(String(ev.target?.result || ''))
+    }
+    reader.readAsText(file)
+    e.target.value = ''
   }
 
   function saveRates() {
@@ -261,57 +332,97 @@ export default function SettingsTab() {
           <h3 className="text-white font-bold text-sm">📧 Email Backup</h3>
         </div>
         <p className="text-emerald-500 text-xs mb-3 leading-relaxed">
-          Poora data ek code mein badal jata hai. Us code ko khud ko email kar lo.
-          Naye phone pe wahi code paste karke sab wapas le aao. Koi login nahi, koi setup nahi.
+          Email ID daalo aur Send dabao — backup code apne aap email mein bhar jayega.
+          Naye phone pe usi email se code copy karke restore kar lena.
         </p>
 
-        <button onClick={makeBackup} disabled={backupBusy || entries.length === 0}
-          className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-emerald-950 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
-          <Mail size={18} /> {backupBusy ? 'Ban raha hai...' : 'Backup Code Banao'}
+        {backupCode ? (
+          <p className="text-emerald-400 text-[11px] mb-2">{backupInfo} · code ready ✅</p>
+        ) : (
+          <p className="text-emerald-600 text-[11px] mb-2">Code ban raha hai...</p>
+        )}
+
+        <label className="text-emerald-400 text-xs font-semibold block mb-1">Kisko bhejna hai?</label>
+        <input
+          type="email"
+          value={toEmail}
+          onChange={(e) => setToEmail(e.target.value)}
+          placeholder="tumhara-email@gmail.com"
+          className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-emerald-700"
+        />
+
+        <button
+          onClick={sendBackupEmail}
+          disabled={backupBusy || !backupCode}
+          className="mt-2 w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-emerald-950 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        >
+          <Mail size={18} /> Email bhejo (code auto bhara)
         </button>
 
-        {backupCode && (
-          <div className="mt-3 space-y-2">
-            <p className="text-emerald-400 text-[11px]">{backupInfo} · {backupCode.length} characters</p>
-            <textarea readOnly value={backupCode} rows={4}
-              onFocus={(e) => e.currentTarget.select()}
-              className="w-full bg-emerald-950/60 text-emerald-300 border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono break-all resize-none" />
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={copyBackup}
-                className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-                <Copy size={14} /> Copy karo
-              </button>
-              <button onClick={emailBackup}
-                className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-                <Mail size={14} /> Email kholo
-              </button>
-            </div>
-            <button onClick={downloadBackupFile}
-              className="w-full text-emerald-400 hover:text-emerald-300 text-xs font-semibold py-1 flex items-center justify-center gap-1.5 transition-colors">
-              <FileDown size={13} /> Ya file mein download karo (.txt)
-            </button>
-            <p className="text-emerald-600 text-[10px] text-center leading-relaxed">
-              Email app khulega — pehle "Copy karo" dabao, phir email mein code paste kar do.
-            </p>
-          </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <button
+            onClick={shareBackup}
+            disabled={!backupCode}
+            className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <Share2 size={14} /> Share karo
+          </button>
+          <button
+            onClick={shareBackupFile}
+            disabled={!backupCode}
+            className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <FileText size={14} /> File bhejo
+          </button>
+        </div>
+
+        {backupCode.length > 4000 && (
+          <p className="text-amber-400 text-[10px] mt-2 leading-relaxed">
+            Code bada hai — email app poora na bhare to "Share karo" ya "File bhejo" use karo, wo poora chala jayega.
+          </p>
         )}
+
+        <div className="flex items-center justify-center gap-4 mt-2">
+          <button onClick={downloadBackupFile} className="text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors">
+            <FileDown size={12} /> .txt download
+          </button>
+          <button onClick={copyBackup} className="text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors">
+            <Copy size={12} /> code copy
+          </button>
+        </div>
 
         <div className="mt-4 pt-4 border-t border-emerald-800">
           <p className="text-amber-300 text-xs font-semibold mb-2">🔄 Restore karo (naya phone)</p>
-          <textarea value={pasteCode} onChange={(e) => setPasteCode(e.target.value)} rows={4}
-            placeholder="Yahan backup code paste karo..."
-            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono resize-none focus:outline-none focus:border-amber-400 placeholder:text-emerald-700" />
-          <button onClick={doRestore} disabled={backupBusy || !pasteCode.trim()}
-            className="mt-2 w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+          <textarea
+            value={pasteCode}
+            onChange={(e) => setPasteCode(e.target.value)}
+            rows={3}
+            placeholder="Backup code yahan paste karo..."
+            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-2 text-[10px] font-mono resize-none focus:outline-none focus:border-amber-400 placeholder:text-emerald-700"
+          />
+          <button
+            onClick={doRestore}
+            disabled={backupBusy || !pasteCode.trim()}
+            className="mt-2 w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
+          >
             <RotateCcw size={16} /> {backupBusy ? 'Restore ho raha...' : 'Restore Karo'}
           </button>
-          <p className="text-emerald-600 text-[10px] mt-2 leading-relaxed">
-            Purani entries jodi jaati hain — jo pehle se hai wo dobara nahi aayegi, kuch delete nahi hota.
+
+          <input ref={restoreFileRef} type="file" accept=".txt,text/plain" onChange={handleRestoreFile} className="hidden" />
+          <button
+            onClick={() => restoreFileRef.current?.click()}
+            className="mt-2 w-full text-emerald-400 hover:text-emerald-300 text-[11px] font-semibold py-1 flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <Upload size={13} /> ya backup .txt file se restore karo
+          </button>
+
+          <p className="text-emerald-600 text-[10px] mt-1 leading-relaxed">
+            Purani entries jodi jaati hain — duplicate skip, kuch delete nahi hota.
           </p>
         </div>
 
         {backupMsg && (
-          <div className={`mt-3 text-center text-xs ${backupMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
+          <div className={`mt-3 text-center text-xs ${backupMsg.startsWith('✅') ? 'text-green-300' : backupMsg.startsWith('📧') ? 'text-amber-300' : 'text-red-300'}`}>
             {backupMsg}
           </div>
         )}
