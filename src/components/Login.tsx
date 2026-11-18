@@ -2,11 +2,28 @@ import { useState } from 'react'
 import { useStore } from '../store'
 import { LogIn, UserPlus, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
 import FarmerLogo from './FarmerLogo'
+import { isCloudAvailable } from '../cloud'
 
 export default function Login() {
   const login = useStore((s) => s.login)
   const signup = useStore((s) => s.signup)
   const resetPin = useStore((s) => s.resetPin)
+  const googleLogin = useStore((s) => s.googleLogin)
+
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleError, setGoogleError] = useState('')
+
+  async function handleGoogle() {
+    setGoogleError('')
+    setGoogleLoading(true)
+    try {
+      const res = await googleLogin()
+      if (!res.ok) setGoogleError(res.error || 'Google login fail ho gaya')
+    } catch {
+      setGoogleError('Google login fail ho gaya. Dobara try karo.')
+    }
+    setGoogleLoading(false)
+  }
 
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
   const [username, setUsername] = useState('')
@@ -87,6 +104,39 @@ export default function Login() {
         {success && (
           <div className="bg-green-900/50 border border-green-700 rounded-lg px-4 py-2 mb-3 text-green-300 text-sm text-center">
             {success}
+          </div>
+        )}
+
+        {/* GOOGLE LOGIN */}
+        {isCloudAvailable() ? (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleLoading}
+              className="w-full bg-white hover:bg-zinc-100 disabled:opacity-60 text-zinc-800 font-bold py-3 rounded-xl flex items-center justify-center gap-2.5 transition-colors"
+            >
+              {googleLoading ? (
+                <Loader2 size={18} className="animate-spin text-zinc-400" />
+              ) : (
+                <span className="w-5 h-5 rounded-full bg-[#4285F4] text-white text-[12px] font-bold flex items-center justify-center leading-none">
+                  G
+                </span>
+              )}
+              {googleLoading ? 'Google se jud raha...' : 'Continue with Google'}
+            </button>
+            {googleError && <p className="text-red-400 text-xs text-center mt-2">{googleError}</p>}
+            <div className="flex items-center gap-2 my-4">
+              <div className="h-px bg-emerald-800 flex-1" />
+              <span className="text-emerald-300 text-xs">ya PIN se</span>
+              <div className="h-px bg-emerald-800 flex-1" />
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4 bg-emerald-900/40 border border-emerald-800 rounded-lg px-3 py-2 text-center">
+            <p className="text-emerald-300 text-[11px] leading-relaxed">
+              Google login ka setup baaki hai — abhi PIN se chalao. Tarika Guide tab mein hai.
+            </p>
           </div>
         )}
 

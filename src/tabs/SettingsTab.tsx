@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useStore, useRates, useReminders, useEntries, exportCSV, downloadCSV, parseCSV, startReminders } from '../store'
-import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Mail, Copy, RotateCcw, FileDown, Share2, FileText } from 'lucide-react'
+import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Mail, Copy, RotateCcw, FileDown, Share2, FileText, Cloud, CloudOff, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
 import { packBackup, unpackBackup, backupSummary, type BackupData } from '../backup'
+import { isCloudAvailable } from '../cloud'
 
 export default function SettingsTab() {
   const rates = useRates()
@@ -179,6 +180,63 @@ export default function SettingsTab() {
     e.target.value = ''
   }
 
+  // ─── Cloud sync (Google) ───
+  const cloudUser = useStore((s) => s.cloudUser)
+  const cloudStatus = useStore((s) => s.cloudStatus)
+  const googleLogin = useStore((s) => s.googleLogin)
+  const googleLogout = useStore((s) => s.googleLogout)
+  const cloudPull = useStore((s) => s.cloudPull)
+  const cloudPush = useStore((s) => s.cloudPush)
+  const migrateLocalToCloud = useStore((s) => s.migrateLocalToCloud)
+  const [cloudMsg, setCloudMsg] = useState('')
+  const [cloudBusy, setCloudBusy] = useState(false)
+  const [migrateFrom, setMigrateFrom] = useState('')
+
+  const localAccounts = Object.keys(users).filter((k) => !k.startsWith('g:'))
+
+  function flashCloud(msg: string) {
+    setCloudMsg(msg)
+    setTimeout(() => setCloudMsg(''), 4000)
+  }
+
+  async function handleCloudConnect() {
+    setCloudBusy(true)
+    const res = await googleLogin()
+    flashCloud(res.ok ? '✅ Google se jud gaya!' : '❌ ' + (res.error || 'Fail ho gaya'))
+    setCloudBusy(false)
+  }
+
+  async function handleCloudPush() {
+    setCloudBusy(true)
+    const res = await cloudPush()
+    flashCloud(res.ok ? '✅ Cloud pe save ho gaya!' : '❌ ' + (res.error || 'Fail'))
+    setCloudBusy(false)
+  }
+
+  async function handleCloudPull() {
+    setCloudBusy(true)
+    const res = await cloudPull()
+    flashCloud(res.ok ? '✅ Cloud se data aa gaya!' : '❌ ' + (res.error || 'Fail'))
+    setCloudBusy(false)
+  }
+
+  async function handleMigrate() {
+    if (!migrateFrom) {
+      flashCloud('❌ Pehle account chuno jiska data bhejna hai')
+      return
+    }
+    setCloudBusy(true)
+    const res = await migrateLocalToCloud(migrateFrom)
+    if (res.ok) flashCloud(`✅ ${res.count} entries cloud pe chali gayi!`)
+    else flashCloud('❌ ' + (res.error || 'Fail'))
+    setCloudBusy(false)
+  }
+
+  async function handleGoogleDisconnect() {
+    await googleLogout()
+    flashCloud('Google se disconnect ho gaya')
+  }
+
   function saveRates() {
     setRates(parseFloat(gaayRate) || 0, parseFloat(bhainsRate) || 0)
     setRateSaved(true)
@@ -321,6 +379,95 @@ export default function SettingsTab() {
         {importMsg && (
           <div className={`mt-2 text-center text-sm ${importMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
             {importMsg}
+          </div>
+        )}
+      </div>
+
+      {/* ─── CLOUD SYNC ─── */}
+      <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
+        <div className="flex items-center gap-2 mb-3">
+          {cloudUser ? <Cloud className="text-amber-300" size={18} /> : <CloudOff className="text-emerald-300" size={18} />}
+          <h3 className="text-white font-bold text-sm">☁️ Cloud Sync (Google)</h3>
+        </div>
+
+        {!isCloudAvailable() && (
+          <p className="text-emerald-300 text-xs leading-relaxed">
+            Firebase setup baaki hai. Guide tab → &quot;☁️ Google login setup&quot; dekho — config bharte hi ye card chalu ho jayega.
+            Tab tak Email Backup se kaam chala lo.
+          </p>
+        )}
+
+        {isCloudAvailable() && !cloudUser && (
+          <>
+            <p className="text-emerald-300 text-xs mb-3 leading-relaxed">
+              Google se jud jao — data cloud pe safe rahega aur har phone pe same dikhega.
+            </p>
+            <button onClick={handleCloudConnect} disabled={cloudBusy}
+              className="w-full bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-800 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+              <span className="w-5 h-5 rounded-full bg-[#4285F4] text-white text-[12px] font-bold flex items-center justify-center leading-none">G</span>
+              {cloudBusy ? 'Jud raha hai...' : 'Google se connect karo'}
+            </button>
+          </>
+        )}
+
+        {isCloudAvailable() && cloudUser && (
+          <div className="space-y-3">
+            <div className="bg-emerald-950/40 rounded-lg p-3">
+              <p className="text-white text-sm font-semibold truncate">{cloudUser.name}</p>
+              <p className="text-emerald-300 text-xs truncate">{cloudUser.email}</p>
+              <p className="text-xs mt-1">
+                {cloudStatus === 'syncing' && <span className="text-amber-300">⏳ Sync ho raha...</span>}
+                {cloudStatus === 'synced' && <span className="text-green-300">✅ Cloud pe save hai</span>}
+                {cloudStatus === 'error' && <span className="text-red-300">⚠️ Sync fail — internet check karo</span>}
+                {cloudStatus === 'idle' && <span className="text-emerald-300">Abhi sync nahi hua</span>}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={handleCloudPush} disabled={cloudBusy}
+                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+                <ArrowUpFromLine size={14} /> Bhejo
+              </button>
+              <button onClick={handleCloudPull} disabled={cloudBusy}
+                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+                <ArrowDownToLine size={14} /> Laao
+              </button>
+            </div>
+
+            {localAccounts.length > 0 && (
+              <div className="bg-amber-950/40 border border-amber-800/30 rounded-lg p-3">
+                <p className="text-amber-300 text-xs font-semibold mb-2">📦 Purana data cloud pe bhejo</p>
+                <p className="text-emerald-300 text-[11px] mb-2 leading-relaxed">
+                  Pehle PIN wale account ka data yahan se cloud mein daal sakte ho.
+                </p>
+                <div className="flex gap-2">
+                  <select value={migrateFrom} onChange={(e) => setMigrateFrom(e.target.value)}
+                    className="flex-1 bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400">
+                    <option value="">account chuno...</option>
+                    {localAccounts.map((k) => (
+                      <option key={k} value={k}>
+                        {users[k]?.username || k} ({(useStore.getState().allEntries[k] || []).length} entries)
+                      </option>
+                    ))}
+                  </select>
+                  <button onClick={handleMigrate} disabled={cloudBusy}
+                    className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 text-xs font-bold px-3 rounded-lg transition-colors">
+                    Bhejo
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button onClick={handleGoogleDisconnect}
+              className="w-full text-red-300 hover:text-red-200 text-xs font-semibold py-1 transition-colors">
+              Google se disconnect karo
+            </button>
+          </div>
+        )}
+
+        {cloudMsg && (
+          <div className={`mt-3 text-center text-sm ${cloudMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
+            {cloudMsg}
           </div>
         )}
       </div>

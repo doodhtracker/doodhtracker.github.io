@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { MilkEntry, User, Tab, Rates, Review } from './types'
 import { hashPin, verifyPin, encryptData, decryptData } from './crypto'
+import { isCloudAvailable, signInWithGoogle, signOutGoogle, loadCloud, saveCloud, type CloudUser } from './cloud'
 import type { BackupData } from './backup'
 
 // ─── Encrypted Storage Adapter ───
@@ -55,8 +56,25 @@ interface StoreState {
   addReview: (r: Omit<Review, 'id' | 'createdAt'>) => void
   removeReview: (id: number) => void
 
+  // ─── Cloud (Google login + Firestore) ───
+  cloudUser: CloudUser | null
+  cloudStatus: CloudStatus
+  setCloudUser: (u: CloudUser | null) => void
+  googleLogin: () => Promise<CloudResult>
+  googleLogout: () => Promise<void>
+  cloudPull: () => Promise<CloudResult>
+  cloudPush: () => Promise<CloudResult>
+  migrateLocalToCloud: (sourceKey: string) => Promise<CloudResult & { count: number }>
+
   // ─── Email backup se restore ───
   restoreBackup: (data: BackupData) => { ok: boolean; entries: number; reviews: number; error?: string }
+}
+
+export type CloudStatus = 'idle' | 'syncing' | 'synced' | 'error'
+
+export interface CloudResult {
+  ok: boolean
+  error?: string
 }
 
 const DEFAULT_REMINDERS: ReminderConfig = {
@@ -64,6 +82,25 @@ const DEFAULT_REMINDERS: ReminderConfig = {
   eveningEnabled: false,
   morningTime: '06:00',
   eveningTime: '18:00',
+}
+
+export function googleKey(uid: string): string {
+  return `g:${uid}`
+}
+
+function errText(e: unknown): string {
+  if (e && typeof e === 'object' && 'code' in e) {
+    const code = String((e as { code?: unknown }).code || '')
+    if (code.includes('popup-closed-by-user')) return 'Google window band ho gaya. Dobara try karo.'
+    if (code.includes('popup-blocked')) return 'Browser ne popup roka. Popup allow karke dobara try karo.'
+    if (code.includes('unauthorized-domain')) return 'Yeh domain Firebase mein allowed nahi hai. Guide tab dekho.'
+    if (code.includes('network-request-failed')) return 'Internet nahi hai. Online hoke try karo.'
+    if (code.includes('permission-denied')) return 'Firestore rules permission nahi de rahi. Guide tab dekho.'
+    if (code.includes('operation-not-allowed')) return 'Google sign-in Firebase mein ON nahi hai. Guide tab dekho.'
+    return `Error: ${code}`
+  }
+  const m = e instanceof Error ? e.message : String(e)
+  return m || 'Kuch gadbad ho gayi'
 }
 
 function entrySig(e: MilkEntry): string {
@@ -104,6 +141,17 @@ function mergeEntries(base: MilkEntry[], incoming: MilkEntry[]): MilkEntry[] {
   return out.map((e, i) => ({ ...e, id: i + 1 }))
 }
 
+// Auto-push: data badle to cloud pe bhej do (debounced)
+let pushTimer: ReturnType<typeof setTimeout> | null = null
+function scheduleCloudPush(get: () => StoreState) {
+  const s = get()
+  if (!s.cloudUser || !s.currentUser || !s.currentUser.startsWith('g:')) return
+  if (pushTimer) clearTimeout(pushTimer)
+  pushTimer = setTimeout(() => {
+    void get().cloudPush()
+  }, 1500)
+}
+
 export interface ReminderConfig {
   morningEnabled: boolean
   eveningEnabled: boolean
@@ -123,6 +171,8 @@ export const useStore = create<StoreState>()(
       activeTab: 'home',
       reviews: [],
       nextReviewId: 1,
+      cloudUser: null,
+      cloudStatus: 'idle',
 
       // LOGIN — async, PIN ko SHA-256 hash karke compare karta hai
       // Old plain-text PIN ke liye migration fallback bhi hai
@@ -179,12 +229,14 @@ export const useStore = create<StoreState>()(
         const u = get().currentUser
         if (!u) return
         set((s) => ({ allRates: { ...s.allRates, [u]: { gaay, bhains } } }))
+        scheduleCloudPush(get)
       },
 
       setReminders: (config) => {
         const u = get().currentUser
         if (!u) return
         set((s) => ({ allReminders: { ...s.allReminders, [u]: config } }))
+        scheduleCloudPush(get)
       },
 
       addEntry: (e) => {
@@ -195,6 +247,7 @@ export const useStore = create<StoreState>()(
           allEntries: { ...s.allEntries, [u]: [...(s.allEntries[u] || []), { ...e, id, createdAt: Date.now() }] },
           nextEntryId: { ...s.nextEntryId, [u]: id + 1 },
         }))
+        scheduleCloudPush(get)
       },
 
       removeEntry: (id) => {
@@ -203,6 +256,7 @@ export const useStore = create<StoreState>()(
         set((s) => ({
           allEntries: { ...s.allEntries, [u]: (s.allEntries[u] || []).filter((e) => e.id !== id) },
         }))
+        scheduleCloudPush(get)
       },
 
       addReview: (r) => {
@@ -236,6 +290,108 @@ export const useStore = create<StoreState>()(
           allEntries: { ...s.allEntries, [u]: merged },
           nextEntryId: { ...s.nextEntryId, [u]: maxId + 1 },
         }))
+        scheduleCloudPush(get)
+      },
+
+      // ─── Cloud actions ───
+
+      setCloudUser: (u) => set({ cloudUser: u, cloudStatus: u ? get().cloudStatus : 'idle' }),
+
+      googleLogin: async () => {
+        if (!isCloudAvailable()) {
+          return { ok: false, error: 'Firebase config nahi bhara hai. Guide tab mein setup dekho.' }
+        }
+        set({ cloudStatus: 'syncing' })
+        try {
+          const cu = await signInWithGoogle()
+          const key = googleKey(cu.uid)
+          set((s) => ({
+            users: { ...s.users, [key]: { username: cu.name || cu.email, pin: '' } },
+            allEntries: { ...s.allEntries, [key]: s.allEntries[key] || [] },
+            nextEntryId: { ...s.nextEntryId, [key]: s.nextEntryId[key] || 1 },
+            allRates: { ...s.allRates, [key]: s.allRates[key] || { gaay: 0, bhains: 0 } },
+            allReminders: { ...s.allReminders, [key]: s.allReminders[key] || DEFAULT_REMINDERS },
+            cloudUser: cu,
+            currentUser: key,
+            activeTab: 'home',
+          }))
+
+          const cloud = await loadCloud(cu.uid)
+          if (cloud && cloud.entries.length > 0) {
+            const incoming = sanitizeEntries(cloud.entries)
+            const merged = mergeEntries(get().allEntries[key] || [], incoming)
+            set((s) => ({
+              allEntries: { ...s.allEntries, [key]: merged },
+              nextEntryId: { ...s.nextEntryId, [key]: merged.length + 1 },
+              allRates: { ...s.allRates, [key]: cloud.rates },
+              allReminders: { ...s.allReminders, [key]: cloud.reminders },
+              cloudStatus: 'synced',
+            }))
+          } else {
+            set({ cloudStatus: 'synced' })
+          }
+          return { ok: true }
+        } catch (e) {
+          set({ cloudStatus: 'error' })
+          return { ok: false, error: errText(e) }
+        }
+      },
+
+      googleLogout: async () => {
+        try {
+          await signOutGoogle()
+        } catch {
+          // ignore
+        }
+        set({ cloudUser: null, cloudStatus: 'idle' })
+      },
+
+      cloudPull: async () => {
+        const { cloudUser, currentUser } = get()
+        if (!cloudUser || !currentUser) return { ok: false, error: 'Pehle Google se login karo' }
+        set({ cloudStatus: 'syncing' })
+        try {
+          const cloud = await loadCloud(cloudUser.uid)
+          if (!cloud) {
+            set({ cloudStatus: 'synced' })
+            return { ok: true }
+          }
+          const incoming = sanitizeEntries(cloud.entries)
+          const merged = mergeEntries(get().allEntries[currentUser] || [], incoming)
+          set((s) => ({
+            allEntries: { ...s.allEntries, [currentUser]: merged },
+            nextEntryId: { ...s.nextEntryId, [currentUser]: merged.length + 1 },
+            allRates: { ...s.allRates, [currentUser]: cloud.rates },
+            allReminders: { ...s.allReminders, [currentUser]: cloud.reminders },
+            cloudStatus: 'synced',
+          }))
+          return { ok: true }
+        } catch (e) {
+          set({ cloudStatus: 'error' })
+          return { ok: false, error: errText(e) }
+        }
+      },
+
+      cloudPush: async () => {
+        const { cloudUser, currentUser, allEntries, allRates, allReminders } = get()
+        if (!cloudUser || !currentUser) return { ok: false, error: 'Pehle Google se login karo' }
+        set({ cloudStatus: 'syncing' })
+        try {
+          await saveCloud(
+            cloudUser.uid,
+            {
+              entries: allEntries[currentUser] || [],
+              rates: allRates[currentUser] || { gaay: 0, bhains: 0 },
+              reminders: allReminders[currentUser] || DEFAULT_REMINDERS,
+            },
+            cloudUser.email,
+          )
+          set({ cloudStatus: 'synced' })
+          return { ok: true }
+        } catch (e) {
+          set({ cloudStatus: 'error' })
+          return { ok: false, error: errText(e) }
+        }
       },
 
       restoreBackup: (data) => {
@@ -277,12 +433,37 @@ export const useStore = create<StoreState>()(
             reviews: [...withIds, ...existingReviews],
             nextReviewId: nextRid,
           }))
+          scheduleCloudPush(get)
           return { ok: true, entries: merged.length, reviews: withIds.length }
         } catch {
           return { ok: false, entries: 0, reviews: 0, error: 'Restore fail ho gaya' }
         }
       },
 
+      migrateLocalToCloud: async (sourceKey) => {
+        const { cloudUser, currentUser } = get()
+        if (!cloudUser || !currentUser) return { ok: false, count: 0, error: 'Pehle Google se login karo' }
+        if (!sourceKey || sourceKey.startsWith('g:')) {
+          return { ok: false, count: 0, error: 'Sahi local account chuno' }
+        }
+        const sourceEntries = get().allEntries[sourceKey] || []
+        if (sourceEntries.length === 0) {
+          return { ok: false, count: 0, error: 'Us account mein koi entry nahi hai' }
+        }
+        const merged = mergeEntries(get().allEntries[currentUser] || [], sourceEntries)
+        const sourceRates = get().allRates[sourceKey] || { gaay: 0, bhains: 0 }
+        const currentRates = get().allRates[currentUser] || { gaay: 0, bhains: 0 }
+        const ratesToUse =
+          currentRates.gaay || currentRates.bhains ? currentRates : sourceRates
+        set((s) => ({
+          allEntries: { ...s.allEntries, [currentUser]: merged },
+          nextEntryId: { ...s.nextEntryId, [currentUser]: merged.length + 1 },
+          allRates: { ...s.allRates, [currentUser]: ratesToUse },
+        }))
+        const pushed = await get().cloudPush()
+        if (!pushed.ok) return { ok: false, count: 0, error: pushed.error }
+        return { ok: true, count: sourceEntries.length }
+      },
     }),
     {
       name: 'doodh-tracker-v4',

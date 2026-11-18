@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Wallet, Bell, Download, Upload, MessageSquare, Mail } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Wallet, Bell, Download, Upload, MessageSquare, Mail, Cloud } from 'lucide-react'
 
 interface Section {
   title: string
@@ -199,6 +199,48 @@ const sections: Section[] = [
       '',
       '💡 Tip: mahine mein ek baar backup bana ke khud ko email kar lo. Code chhota rehta hai, email mein aaram se aa jata hai.',
       '⚠️ Backup code kisi ko na do — usme tumhara poora data hai.',
+    ],
+  },
+  {
+    title: '☁️ Google login setup (ek baar ka kaam)',
+    icon: Cloud,
+    content: [
+      'Google se login aur cloud data ke liye Firebase chahiye. Ek baar karna hai, free hai.',
+      '',
+      '1️⃣ Firebase project banao:',
+      '   • console.firebase.google.com kholo, apne Google account se login karo.',
+      '   • "Add project" → naam do (jaise doodh-tracker) → Continue → Create project.',
+      '',
+      '2️⃣ Google sign-in ON karo:',
+      '   • Authentication → Get started → Sign-in method tab.',
+      '   • Google chuno → Enable → support email chuno → Save.',
+      '',
+      '3️⃣ Firestore banao:',
+      '   • Firestore Database → Create database.',
+      '   • Location: asia-south1 → Start in production mode → Create.',
+      '   • Rules tab mein ye paste karo aur Publish karo:',
+      '      rules_version = \'2\';',
+      '      service cloud.firestore {',
+      '        match /databases/{database}/documents {',
+      '          match /users/{uid} {',
+      '            allow read, write: if request.auth != null && request.auth.uid == uid;',
+      '          }',
+      '        }',
+      '      }',
+      '',
+      '4️⃣ Website ka domain allow karo:',
+      '   • Authentication → Settings → Authorized domains → Add domain.',
+      '   • Yahan daalo: doodhtracker.github.io',
+      '',
+      '5️⃣ Config copy karo:',
+      '   • Project settings (⚙️) → Your apps → Web app (</>) add karo → Register.',
+      '   • firebaseConfig ki values copy karo.',
+      '   • src/firebase-config.ts file mein PASTE_ wali jagah daal do.',
+      '',
+      '6️⃣ Ho gaya:',
+      '   • Login screen pe "Continue with Google" aa jayega.',
+      '   • Settings → ☁️ Cloud Sync se connect karke purana data cloud pe bhej sakte ho.',
+      '   • Config na bharne tak app PIN se normal chalta rahega — kuch nahi bigdega.',
     ],
   },
 ]
