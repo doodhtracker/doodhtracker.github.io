@@ -1,5 +1,5 @@
 import { useStore, useEntries, useRates, todayStr, dayTotal, sessionTotal, fmtDate, fmtMonth, monthStr, monthTotal, monthPaisa, last7Days } from '../store'
-import { Sunrise, Sunset, Plus, TrendingUp, Wallet, Trash2, Heart, MessageSquare } from 'lucide-react'
+import { Sunrise, Sunset, Plus, TrendingUp, Wallet, Trash2 } from 'lucide-react'
 import { useT } from '../i18n'
 
 export default function HomeTab() {
@@ -127,21 +127,6 @@ export default function HomeTab() {
         </div>
       )}
 
-      {/* ─── Sheebu ki taraf se ─── */}
-      <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800">
-        <div className="flex items-center gap-2 mb-2">
-          <Heart className="text-amber-300" size={18} />
-          <h3 className="text-white font-bold text-sm">{t('about.title')}</h3>
-        </div>
-        <p className="text-emerald-300 text-sm leading-relaxed mb-2">{t('about.text')}</p>
-        <p className="text-emerald-300 text-sm leading-relaxed mb-3">{t('about.review')}</p>
-        <button
-          onClick={() => setActiveTab('review')}
-          className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
-        >
-          <MessageSquare size={16} /> {t('about.btn')}
-        </button>
-      </div>
     </div>
   )
 }

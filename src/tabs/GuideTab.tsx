@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Download, MessageSquare, Cloud } from 'lucide-react'
-import { useLang } from '../i18n'
+import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Download, MessageSquare, Cloud, Heart } from 'lucide-react'
+import { useLang, useT } from '../i18n'
+import { useStore } from '../store'
 
 interface Section {
   title: string
@@ -585,6 +586,8 @@ const guides: Record<string, Section[]> = { hi, hinglish, en }
 
 export default function GuideTab() {
   const lang = useLang()
+  const t = useT()
+  const setActiveTab = useStore((s) => s.setActiveTab)
   const sections = guides[lang] ?? hinglish
   const [openIdx, setOpenIdx] = useState<number | null>(0)
 
@@ -609,6 +612,23 @@ export default function GuideTab() {
         <BookOpen className="text-amber-300 mx-auto mb-2" size={32} />
         <h2 className="text-white text-lg font-bold">{headerTitle}</h2>
         <p className="text-emerald-300 text-sm mt-1">{headerSub}</p>
+      </div>
+
+
+      {/* ─── Sheebu ki taraf se ─── */}
+      <div className="bg-emerald-900/40 rounded-2xl p-4 border border-emerald-800">
+        <div className="flex items-center gap-2 mb-2">
+          <Heart className="text-amber-300" size={18} />
+          <h3 className="text-white font-bold text-sm">{t('about.title')}</h3>
+        </div>
+        <p className="text-emerald-300 text-sm leading-relaxed mb-2">{t('about.text')}</p>
+        <p className="text-emerald-300 text-sm leading-relaxed mb-3">{t('about.review')}</p>
+        <button
+          onClick={() => setActiveTab('review')}
+          className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        >
+          <MessageSquare size={16} /> {t('about.btn')}
+        </button>
       </div>
 
       {sections.map((s, i) => {
