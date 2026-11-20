@@ -182,6 +182,10 @@ const hinglish: Dict = {
   'rev.lblSuggestion': 'Suggestion',
   'rev.noneWritten': '(abhi koi review nahi likha)',
   'rev.noRating': 'rating nahi diya',
+  'about.title': '❤️ Sheebu ki taraf se',
+  'about.text': 'Ye website Sheebu ne apne gaanv ke logon ke liye khaas banayi hai — doodh ka hisaab digitally save rakhne ke liye. Sheebu ka plan hai ki iska app version bhi launch karein.',
+  'about.review': 'Agar yeh digital doodh notebook pasand aayi, to Review mein kuch likh do — seedha Sheebu ke email par chala jayega.',
+  'about.btn': 'Review likho',
 }
 
 const hi: Dict = {
@@ -353,6 +357,10 @@ const hi: Dict = {
   'rev.lblSuggestion': 'सुझाव',
   'rev.noneWritten': '(अभी कोई समीक्षा नहीं लिखी)',
   'rev.noRating': 'रेटिंग नहीं दी',
+  'about.title': '❤️ शीबू की तरफ़ से',
+  'about.text': 'यह वेबसाइट शीबू ने अपने गाँव के लोगों के लिए ख़ास बनाई है — दूध का हिसाब डिजिटल तरीके से सुरक्षित रखने के लिए। शीबू का प्लान है कि इसका ऐप वर्ज़न भी लॉन्च करें।',
+  'about.review': 'अगर यह डिजिटल दूध नोटबुक पसंद आई, तो समीक्षा में कुछ लिख दो — सीधे शीबू के ईमेल पर चला जाएगा।',
+  'about.btn': 'समीक्षा लिखो',
 }
 
 const en: Dict = {
@@ -524,6 +532,10 @@ const en: Dict = {
   'rev.lblSuggestion': 'Suggestion',
   'rev.noneWritten': '(no reviews written yet)',
   'rev.noRating': 'no rating given',
+  'about.title': '❤️ From Sheebu',
+  'about.text': 'Sheebu built this website specially for the people of his village — to keep milk records safe digitally. Sheebu plans to launch an app version too.',
+  'about.review': 'If you liked this digital milk notebook, write something in Review — it goes straight to Sheebu email.',
+  'about.btn': 'Write a review',
 }
 
 export const dicts: Record<Lang, Dict> = { hi, hinglish, en }
