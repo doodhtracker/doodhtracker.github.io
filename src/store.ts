@@ -4,6 +4,7 @@ import type { MilkEntry, User, Tab, Rates, Review } from './types'
 import { hashPin, verifyPin, encryptData, decryptData } from './crypto'
 import { isCloudAvailable, signInWithGoogle, signOutGoogle, loadCloud, saveCloud, type CloudUser } from './cloud'
 import type { BackupData } from './backup'
+import type { Lang } from './i18n'
 
 // ─── Encrypted Storage Adapter ───
 // Poora state JSON encrypt hoke localStorage mein save hota hai
@@ -44,6 +45,9 @@ interface StoreState {
 
   activeTab: Tab
   setActiveTab: (t: Tab) => void
+
+  lang: Lang
+  setLang: (l: Lang) => void
 
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
@@ -169,6 +173,7 @@ export const useStore = create<StoreState>()(
       allRates: {},
       allReminders: {},
       activeTab: 'home',
+      lang: 'hi' as Lang,
       reviews: [],
       nextReviewId: 1,
       cloudUser: null,
@@ -224,6 +229,7 @@ export const useStore = create<StoreState>()(
 
       logout: () => set({ currentUser: null, activeTab: 'home' }),
       setActiveTab: (t) => set({ activeTab: t }),
+      setLang: (l) => set({ lang: l }),
 
       setRates: (gaay, bhains) => {
         const u = get().currentUser
