@@ -10,7 +10,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-20 bg-emerald-950/90 backdrop-blur border-b border-emerald-800">
-            <div className="max-w-md mx-auto flex items-center gap-2 px-4 py-2.5">
+                  <div className="max-w-md mx-auto flex items-center gap-2 px-4 py-2.5 md:max-w-3xl md:px-6 md:py-3">
         <FarmerLogo size={36} />
         <h1 className="text-lg font-bold text-white">Doodh Tracker</h1>
         <div className="ml-auto flex items-center gap-2">
