@@ -1,5 +1,5 @@
 export const firebaseConfig = {
-  apiKey: 'AIzaSyBn1X0mQKKKgUMJjLhoSS4cd1PQ1MQreI',
+  apiKey: 'AIzaSyBn1X0m0KKKdgUMjjLhoS54cd1PQ1MQreI',
   authDomain: 'doodh-tracker-bb78a.firebaseapp.com',
   projectId: 'doodh-tracker-bb78a',
   storageBucket: 'doodh-tracker-bb78a.firebasestorage.app',
