@@ -142,7 +142,7 @@ export default function ReviewTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-white text-sm font-semibold truncate">{r.name}</p>
-                    <p className="text-emerald-300 text-[11px]">{fmtWhen(r.createdAt)}</p>
+                    <p className="text-emerald-300 text-sm">{fmtWhen(r.createdAt)}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {r.rating > 0 && (

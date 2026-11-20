@@ -285,7 +285,7 @@ export default function SettingsTab() {
             {localAccounts.length > 0 && (
               <div className="bg-amber-950/40 border border-amber-800/30 rounded-lg p-3">
                 <p className="text-amber-300 text-xs font-semibold mb-2">📦 {t('set.cloudMigrateTitle')}</p>
-                <p className="text-emerald-300 text-[11px] mb-2 leading-relaxed">
+                <p className="text-emerald-300 text-sm mb-2 leading-relaxed">
                   {t('set.cloudMigrateSub')}
                 </p>
                 <div className="flex gap-2">
