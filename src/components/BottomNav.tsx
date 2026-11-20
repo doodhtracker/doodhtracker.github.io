@@ -1,17 +1,19 @@
 import { Home, Plus, BarChart3, Settings, BookOpen, MessageSquare } from 'lucide-react'
 import { useStore } from '../store'
+import { useT } from '../i18n'
 
 export default function BottomNav() {
   const activeTab = useStore((s) => s.activeTab)
   const setActiveTab = useStore((s) => s.setActiveTab)
+  const t = useT()
 
   const tabs = [
-    { id: 'home' as const, label: 'Home', icon: Home },
-    { id: 'entry' as const, label: 'Entry', icon: Plus },
-    { id: 'stats' as const, label: 'Stats', icon: BarChart3 },
-    { id: 'settings' as const, label: 'Setting', icon: Settings },
-    { id: 'guide' as const, label: 'Guide', icon: BookOpen },
-    { id: 'review' as const, label: 'Review', icon: MessageSquare },
+    { id: 'home' as const, key: 'nav.home', icon: Home },
+    { id: 'entry' as const, key: 'nav.entry', icon: Plus },
+    { id: 'stats' as const, key: 'nav.stats', icon: BarChart3 },
+    { id: 'settings' as const, key: 'nav.settings', icon: Settings },
+    { id: 'guide' as const, key: 'nav.guide', icon: BookOpen },
+    { id: 'review' as const, key: 'nav.review', icon: MessageSquare },
   ]
 
   return (
@@ -29,7 +31,7 @@ export default function BottomNav() {
               }`}
             >
               <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[8px] font-semibold leading-tight">{tab.label}</span>
+              <span className="text-[8px] font-semibold leading-tight">{t(tab.key)}</span>
             </button>
           )
         })}

@@ -3,12 +3,16 @@ import { useStore } from '../store'
 import { LogIn, UserPlus, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
 import FarmerLogo from './FarmerLogo'
 import { isCloudAvailable } from '../cloud'
+import { LANGS, useT } from '../i18n'
 
 export default function Login() {
   const login = useStore((s) => s.login)
   const signup = useStore((s) => s.signup)
   const resetPin = useStore((s) => s.resetPin)
   const googleLogin = useStore((s) => s.googleLogin)
+  const lang = useStore((s) => s.lang)
+  const setLang = useStore((s) => s.setLang)
+  const t = useT()
 
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
@@ -18,9 +22,9 @@ export default function Login() {
     setGoogleLoading(true)
     try {
       const res = await googleLogin()
-      if (!res.ok) setGoogleError(res.error || 'Google login fail ho gaya')
+      if (!res.ok) setGoogleError(res.error || t('login.googleFail'))
     } catch {
-      setGoogleError('Google login fail ho gaya. Dobara try karo.')
+      setGoogleError(t('login.googleFailRetry'))
     }
     setGoogleLoading(false)
   }
@@ -38,14 +42,14 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    if (!username.trim() || !pin.trim()) { setError('Naam aur PIN dono daalo'); return }
-    if (pin.length < 4) { setError('PIN kam se kam 4 number ka ho'); return }
+    if (!username.trim() || !pin.trim()) { setError(t('login.err.empty')); return }
+    if (pin.length < 4) { setError(t('login.err.pinShort')); return }
     setLoading(true)
     try {
       const ok = await login(username, pin)
-      if (!ok) setError('Galat naam ya PIN. Sahi se daalo ya Forgot PIN dabao.')
+      if (!ok) setError(t('login.err.wrong'))
     } catch {
-      setError('Kuch garbar ho gaya. Dobari try karo.')
+      setError(t('login.err.generic'))
     }
     setLoading(false)
   }
@@ -54,14 +58,14 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    if (!username.trim() || !pin.trim()) { setError('Naam aur PIN dono daalo'); return }
-    if (pin.length < 4) { setError('PIN kam se kam 4 number ka ho'); return }
+    if (!username.trim() || !pin.trim()) { setError(t('login.err.empty')); return }
+    if (pin.length < 4) { setError(t('login.err.pinShort')); return }
     setLoading(true)
     try {
       const ok = await signup(username, pin)
-      if (!ok) setError('Yeh naam pehle se hai. Login karo ya doosra naam chuno.')
+      if (!ok) setError(t('login.err.nameTaken'))
     } catch {
-      setError('Kuch garbar ho gaya. Dobari try karo.')
+      setError(t('login.err.generic'))
     }
     setLoading(false)
   }
@@ -70,34 +74,57 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    if (!username.trim()) { setError('Pehle apna naam daalo'); return }
-    if (newPin.length < 4) { setError('Naya PIN kam se kam 4 number ka ho'); return }
-    if (newPin !== confirmPin) { setError('Dono PIN match nahi karte'); return }
+    if (!username.trim()) { setError(t('login.err.nameFirst')); return }
+    if (newPin.length < 4) { setError(t('login.err.newPinShort')); return }
+    if (newPin !== confirmPin) { setError(t('login.err.pinMismatch')); return }
     setLoading(true)
     try {
       const ok = await resetPin(username, newPin)
-      if (!ok) { setError('Yeh naam register nahi hai. Pehle naya account banao.'); setLoading(false); return }
-      setSuccess('PIN badal gaya! Ab login karo.')
+      if (!ok) { setError(t('login.err.notRegistered')); setLoading(false); return }
+      setSuccess(t('login.ok.pinChanged'))
       setMode('login')
       setPin('')
       setNewPin('')
       setConfirmPin('')
     } catch {
-      setError('Kuch garbar ho gaya. Dobari try karo.')
+      setError(t('login.err.generic'))
     }
     setLoading(false)
   }
 
+  const inputCls =
+    'w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400'
+  const pinCls =
+    'w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400'
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
+        {/* Language switcher */}
+        <div className="mb-3 flex justify-end">
+          <div className="flex items-center rounded-lg border border-emerald-700 bg-emerald-900/70 p-0.5">
+            {LANGS.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setLang(l.id)}
+                className={`rounded-md px-2 py-1 text-[10px] font-bold leading-none transition-colors ${
+                  lang === l.id ? 'bg-amber-500 text-emerald-950' : 'text-emerald-300 hover:text-emerald-100'
+                }`}
+                title={l.label}
+              >
+                {l.short}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="text-center mb-6">
           <div className="flex flex-col items-center gap-2 mb-2">
             <FarmerLogo size={80} />
             <h1 className="text-2xl font-bold text-white">Doodh Tracker</h1>
           </div>
           <p className="text-emerald-300 text-sm">
-            {mode === 'login' ? 'Apna account kholo' : mode === 'signup' ? 'Naya account banao' : 'PIN reset karo'}
+            {mode === 'login' ? t('login.sub.login') : mode === 'signup' ? t('login.sub.signup') : t('login.sub.forgot')}
           </p>
         </div>
 
@@ -123,20 +150,18 @@ export default function Login() {
                   G
                 </span>
               )}
-              {googleLoading ? 'Google se jud raha...' : 'Continue with Google'}
+              {googleLoading ? t('login.googleLoading') : t('login.google')}
             </button>
             {googleError && <p className="text-red-400 text-xs text-center mt-2">{googleError}</p>}
             <div className="flex items-center gap-2 my-4">
               <div className="h-px bg-emerald-800 flex-1" />
-              <span className="text-emerald-300 text-xs">ya PIN se</span>
+              <span className="text-emerald-300 text-xs">{t('login.orPin')}</span>
               <div className="h-px bg-emerald-800 flex-1" />
             </div>
           </div>
         ) : (
           <div className="mb-4 bg-emerald-900/40 border border-emerald-800 rounded-lg px-3 py-2 text-center">
-            <p className="text-emerald-300 text-[11px] leading-relaxed">
-              Google login ka setup baaki hai — abhi PIN se chalao. Tarika Guide tab mein hai.
-            </p>
+            <p className="text-emerald-300 text-[11px] leading-relaxed">{t('login.setupPending')}</p>
           </div>
         )}
 
@@ -144,18 +169,16 @@ export default function Login() {
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naam</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="jaise: Ramesh"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.name')}</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t('login.namePh')} className={inputCls} />
             </div>
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">PIN</label>
-              <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.pin')}</label>
+              <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••" className={pinCls} />
             </div>
             {error && <p className="text-red-400 text-xs text-center">{error}</p>}
             <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              {loading ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />} {loading ? 'Check ho raha...' : 'Login'}
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />} {loading ? t('login.btn.checking') : t('login.btn.login')}
             </button>
           </form>
         )}
@@ -164,18 +187,16 @@ export default function Login() {
         {mode === 'signup' && (
           <form onSubmit={handleSignup} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naam</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="jaise: Ramesh"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.name')}</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t('login.namePh')} className={inputCls} />
             </div>
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naya PIN (4 digit)</label>
-              <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.newPin4')}</label>
+              <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••" className={pinCls} />
             </div>
             {error && <p className="text-red-400 text-xs text-center">{error}</p>}
             <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              {loading ? <Loader2 size={20} className="animate-spin" /> : <UserPlus size={20} />} {loading ? 'Bana raha hoon...' : 'Account Banao'}
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <UserPlus size={20} />} {loading ? t('login.btn.creating') : t('login.btn.signup')}
             </button>
           </form>
         )}
@@ -184,23 +205,20 @@ export default function Login() {
         {mode === 'forgot' && (
           <form onSubmit={handleForgot} className="bg-emerald-900/50 rounded-2xl p-5 border border-emerald-800 space-y-4">
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">Apna Naam</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="jo account mein hai"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.yourName')}</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t('login.yourNamePh')} className={inputCls} />
             </div>
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naya PIN (4 digit)</label>
-              <input type="password" inputMode="numeric" maxLength={6} value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.newPin4')}</label>
+              <input type="password" inputMode="numeric" maxLength={6} value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))} placeholder="••••" className={pinCls} />
             </div>
             <div>
-              <label className="text-emerald-300 text-xs font-semibold block mb-1">Naya PIN Dobara</label>
-              <input type="password" inputMode="numeric" maxLength={6} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))} placeholder="••••"
-                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2.5 text-sm tracking-widest focus:outline-none focus:border-amber-400" />
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('login.newPinAgain')}</label>
+              <input type="password" inputMode="numeric" maxLength={6} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))} placeholder="••••" className={pinCls} />
             </div>
             {error && <p className="text-red-400 text-xs text-center">{error}</p>}
             <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              {loading ? <Loader2 size={20} className="animate-spin" /> : <KeyRound size={20} />} {loading ? 'Badal raha hoon...' : 'PIN Badlo'}
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <KeyRound size={20} />} {loading ? t('login.btn.changing') : t('login.btn.reset')}
             </button>
           </form>
         )}
@@ -209,31 +227,29 @@ export default function Login() {
         <div className="mt-4 text-center space-y-2">
           {mode === 'forgot' ? (
             <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm flex items-center justify-center gap-1">
-              <ArrowLeft size={14} /> Wapas Login par
+              <ArrowLeft size={14} /> {t('login.backToLogin')}
             </button>
           ) : (
             <>
               {mode === 'login' ? (
                 <>
-                  <button onClick={() => { setMode('signup'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm block">
-                    Naya account banana hai? Yahan dabao
+                  <button onClick={() => { setMode('signup'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm block w-full">
+                    {t('login.toSignup')}
                   </button>
-                  <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} className="text-emerald-300 underline text-sm block">
-                    PIN bhul gaye? Reset karo
+                  <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} className="text-emerald-300 underline text-sm block w-full">
+                    {t('login.toForgot')}
                   </button>
                 </>
               ) : (
                 <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} className="text-amber-400 underline text-sm">
-                  Pehle se account hai? Login karo
+                  {t('login.toLogin')}
                 </button>
               )}
             </>
           )}
         </div>
 
-        <p className="text-emerald-300 text-xs text-center mt-4">
-          🔒 Tumhara data encrypted hai. PIN aur entries dono secure — DevTools mein bhi nahi dikhega.
-        </p>
+        <p className="text-emerald-300 text-xs text-center mt-4">{t('login.footer')}</p>
       </div>
     </div>
   )
