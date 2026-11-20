@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useStore, useEntries, useRates, todayStr, fmtDate } from '../store'
 import { Check, Trash2, Sunrise, Sunset } from 'lucide-react'
 import type { AnimalType } from '../types'
+import { useT } from '../i18n'
 
 export default function EntryTab() {
   const addEntry = useStore((s) => s.addEntry)
   const removeEntry = useStore((s) => s.removeEntry)
   const entries = useEntries()
   const rates = useRates()
+  const t = useT()
 
   const [date, setDate] = useState(todayStr())
   const [session, setSession] = useState<'morning' | 'evening'>('morning')
@@ -41,46 +43,47 @@ export default function EntryTab() {
   const currentRate = animalType === 'gaay' ? rates.gaay : rates.bhains
   const paisaPreview = liters ? (parseFloat(liters) * currentRate) : 0
 
+  const inputCls =
+    'w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400'
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 md:grid md:grid-cols-2 md:items-start md:gap-4 md:space-y-0">
       <form onSubmit={handleSubmit} className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800 space-y-3">
-        <h3 className="text-white font-bold">🥛 Nai Entry</h3>
+        <h3 className="text-white font-bold">🥛 {t('entry.title')}</h3>
         <div>
-          <label className="text-emerald-300 text-xs font-semibold block mb-1">📅 Date</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">📅 {t('entry.date')}</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
         </div>
         <div>
-          <label className="text-emerald-300 text-xs font-semibold block mb-1">⏰ Time</label>
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">⏰ {t('entry.time')}</label>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => setSession('morning')}
               className={`flex items-center justify-center gap-1.5 py-3 rounded-lg text-base font-bold transition-colors ${session === 'morning' ? 'bg-amber-500 text-emerald-950' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-700'}`}>
-              <Sunrise size={18} /> Subah
+              <Sunrise size={18} /> {t('home.morning')}
             </button>
             <button type="button" onClick={() => setSession('evening')}
               className={`flex items-center justify-center gap-1.5 py-3 rounded-lg text-base font-bold transition-colors ${session === 'evening' ? 'bg-orange-500 text-emerald-950' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-700'}`}>
-              <Sunset size={18} /> Shaam
+              <Sunset size={18} /> {t('home.evening')}
             </button>
           </div>
         </div>
         <div>
-          <label className="text-emerald-300 text-xs font-semibold block mb-1">Janwar</label>
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('entry.animal')}</label>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => setAnimalType('gaay')}
               className={`py-3 rounded-lg text-base font-bold transition-colors ${animalType === 'gaay' ? 'bg-amber-500 text-emerald-950' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-700'}`}>
-              🐄 Gaay
+              🐄 {t('common.gaay')}
             </button>
             <button type="button" onClick={() => setAnimalType('bhains')}
               className={`py-3 rounded-lg text-base font-bold transition-colors ${animalType === 'bhains' ? 'bg-blue-500 text-white' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-700'}`}>
-              🐃 Bhains
+              🐃 {t('common.bhains')}
             </button>
           </div>
         </div>
         <div>
-          <label className="text-emerald-300 text-xs font-semibold block mb-1">Janwar ka Naam (optional)</label>
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('entry.animalName')}</label>
           <input type="text" value={animalName} onChange={(e) => setAnimalName(e.target.value)}
-            placeholder="jaise: Laxmi, Gauri..."
-            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+            placeholder={t('entry.animalNamePh')} className={inputCls} />
           {knownAnimals.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {knownAnimals.slice(0, 8).map((name) => (
@@ -93,33 +96,32 @@ export default function EntryTab() {
           )}
         </div>
         <div>
-          <label className="text-emerald-300 text-xs font-semibold block mb-1">🥛 Doodh (litre)</label>
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">🥛 {t('entry.liters')}</label>
           <input type="number" step="0.1" min="0" value={liters} onChange={(e) => setLiters(e.target.value)}
-            placeholder="jaise 2.5"
-            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+            placeholder={t('entry.litersPh')} className={inputCls} />
         </div>
         {currentRate > 0 && liters && (
           <div className="bg-green-950/40 border border-green-800/30 rounded-lg px-3 py-2 text-center">
-            <p className="text-green-300 text-sm">💰 Paisa: <b>₹{paisaPreview.toFixed(2)}</b> ({liters}L × ₹{currentRate}/L)</p>
+            <p className="text-green-300 text-sm">💰 {t('entry.money')}: <b>₹{paisaPreview.toFixed(2)}</b> ({liters}L × ₹{currentRate}/L)</p>
           </div>
         )}
         <div>
-          <label className="text-emerald-300 text-xs font-semibold block mb-1">📝 Note (optional)</label>
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">📝 {t('entry.note')}</label>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)}
-            placeholder="koi khaat baat"
-            className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+            placeholder={t('entry.notePh')} className={inputCls} />
         </div>
         <button type="submit"
           className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-          <Check size={20} /> {saved ? '✅ Save ho gaya!' : 'Entry Save Karo'}
+          <Check size={20} /> {saved ? `✅ ${t('entry.saved')}` : t('entry.save')}
         </button>
       </form>
+
       <div>
         <h3 className="text-emerald-300 text-xs font-semibold uppercase mb-2">
-          {fmtDate(date)} ki Entries ({dayEntries.length})
+          {fmtDate(date)} {t('entry.entriesSuffix')} ({dayEntries.length})
         </h3>
         {dayEntries.length === 0 ? (
-          <p className="text-emerald-300 text-sm text-center py-3">Is din koi entry nahi.</p>
+          <p className="text-emerald-300 text-sm text-center py-3">{t('entry.none')}</p>
         ) : (
           <div className="space-y-2">
             {dayEntries.map((e) => (
@@ -128,17 +130,19 @@ export default function EntryTab() {
                   <span className="text-lg">{e.animalType === 'gaay' ? '🐄' : '🐃'}</span>
                   <div>
                     <p className="text-white text-sm font-semibold">
-                      {e.animalType === 'gaay' ? 'Gaay' : 'Bhains'}{e.animalName ? ` · ${e.animalName}` : ''}
+                      {e.animalType === 'gaay' ? t('common.gaay') : t('common.bhains')}{e.animalName ? ` · ${e.animalName}` : ''}
                     </p>
                     <p className="text-emerald-300 text-xs">
-                      {e.session === 'morning' ? '🌅 Subah' : '🌇 Shaam'}{e.note ? ` · ${e.note}` : ''}
+                      {e.session === 'morning' ? `🌅 ${t('home.morning')}` : `🌇 ${t('home.evening')}`}{e.note ? ` · ${e.note}` : ''}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <p className="text-amber-300 font-bold">{e.liters.toFixed(1)} L</p>
-                    {(e.animalType === 'gaay' ? rates.gaay : rates.bhains) > 0 && <p className="text-green-300 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>}
+                    {(e.animalType === 'gaay' ? rates.gaay : rates.bhains) > 0 && (
+                      <p className="text-green-300 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                    )}
                   </div>
                   <button onClick={() => removeEntry(e.id)} className="text-red-300 hover:text-red-400 transition-colors">
                     <Trash2 size={16} />
