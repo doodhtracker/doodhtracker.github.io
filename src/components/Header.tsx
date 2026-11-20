@@ -24,7 +24,7 @@ export default function Header() {
               <button
                 key={l.id}
                 onClick={() => setLang(l.id)}
-                className={`rounded-md px-1.5 py-1 text-[10px] font-bold leading-none transition-colors ${
+                className={`rounded-md px-1.5 py-1 text-[12px] font-bold leading-none transition-colors ${
                   lang === l.id ? 'bg-amber-500 text-emerald-950' : 'text-emerald-300 hover:text-emerald-100'
                 }`}
                 title={l.label}

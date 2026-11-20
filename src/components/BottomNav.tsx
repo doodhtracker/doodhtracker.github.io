@@ -31,7 +31,7 @@ export default function BottomNav() {
               }`}
             >
               <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[8px] font-semibold leading-tight">{t(tab.key)}</span>
+              <span className="text-[11px] font-semibold leading-tight">{t(tab.key)}</span>
             </button>
           )
         })}

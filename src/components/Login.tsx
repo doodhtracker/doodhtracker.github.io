@@ -107,7 +107,7 @@ export default function Login() {
               <button
                 key={l.id}
                 onClick={() => setLang(l.id)}
-                className={`rounded-md px-2 py-1 text-[10px] font-bold leading-none transition-colors ${
+                className={`rounded-md px-2 py-1 text-[12px] font-bold leading-none transition-colors ${
                   lang === l.id ? 'bg-amber-500 text-emerald-950' : 'text-emerald-300 hover:text-emerald-100'
                 }`}
                 title={l.label}
@@ -161,7 +161,7 @@ export default function Login() {
           </div>
         ) : (
           <div className="mb-4 bg-emerald-900/40 border border-emerald-800 rounded-lg px-3 py-2 text-center">
-            <p className="text-emerald-300 text-[11px] leading-relaxed">{t('login.setupPending')}</p>
+            <p className="text-emerald-300 text-sm leading-relaxed">{t('login.setupPending')}</p>
           </div>
         )}
 
