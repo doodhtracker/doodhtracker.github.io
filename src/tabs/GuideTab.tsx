@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Wallet, Bell, Download, Upload, MessageSquare, Mail, Cloud } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Home, Plus, BarChart3, Settings, Milk, LogIn, Wallet, Bell, Download, Upload, MessageSquare, Cloud } from 'lucide-react'
 
 interface Section {
   title: string
@@ -168,37 +168,6 @@ const sections: Section[] = [
       '   • Tumhara email app khulega, review pehle se likha hua hoga.',
       '   • Bas Send dabana hai — feedback developer ke paas chala jayega.',
       'Yaad rakho: website static hai (koi server nahi), isliye review apne aap developer tak nahi jata — email se bhejna zaroori hai.',
-    ],
-  },
-  {
-    title: '📧 Email Backup — naya phone lete waqt ye zaroor karo',
-    icon: Mail,
-    content: [
-      'Phone badal raha hai? Ya data safe rakhna hai? Email Backup se ho jayega — koi login nahi, koi setup nahi.',
-      '',
-      '1️⃣ Purane phone pe backup bhejo:',
-      '   • Settings tab kholo → "📧 Email Backup" section.',
-      '   • Backup code apne aap ban jata hai — kuch dabana nahi padta.',
-      '   • "Kisko bhejna hai?" mein apni email ID daalo (jaise tumhara-naam@gmail.com).',
-      '   • "Email bhejo" dabao → email app khulega, code pehle se bhara hua hoga.',
-      '   • Bas Send dabana hai. Subject "Doodh Tracker Backup" rahega — usse dhoondhna aasan.',
-      '   • Email app na chale to "Share karo" dabao — WhatsApp/Gmail/Notes kisi mein bhi bhej sakte ho.',
-      '   • "File bhejo" se backup .txt file attachment ke roop mein jati hai — sabse safe tarika.',
-      '',
-      '2️⃣ Naye phone pe wapas laao:',
-      '   • Naye phone pe website kholo aur account banao (wahi naam aur PIN jo pehle tha).',
-      '   • Purane phone wali email kholo aur poora code copy karo (CODE START se CODE END tak).',
-      '   • Settings → "📧 Email Backup" → neeche wale box mein paste karo.',
-      '   • "Restore Karo" dabao — saara data wapas aa jayega.',
-      '   • Ya "backup .txt file se restore karo" dabao aur wo file chuno — ek hi baar mein ho jayega.',
-      '',
-      '3️⃣ Kya kya wapas aata hai:',
-      '   • Saari doodh entries, gaay/bhains ke rate, reminder setting, aur reviews.',
-      '   • Jo entries pehle se hain wo dobara nahi aati — duplicate apne aap skip ho jate hain.',
-      '   • Kuch bhi delete nahi hota — restore sirf jodta hai.',
-      '',
-      '💡 Tip: mahine mein ek baar backup bana ke khud ko email kar lo. Code chhota rehta hai, email mein aaram se aa jata hai.',
-      '⚠️ Backup code kisi ko na do — usme tumhara poora data hai.',
     ],
   },
   {
