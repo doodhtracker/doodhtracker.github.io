@@ -175,6 +175,13 @@ const hinglish: Dict = {
   'rev.anon': 'Anonymous',
   'rev.thisDevice': 'Is device ke Reviews',
   'rev.empty': 'Abhi koi review nahi. Upar form bhar ke pehla review likho!',
+  'rev.shareTitle': 'Review Developer ko Bhejo',
+  'rev.shareSub': 'Review is phone pe save hota hai. Developer tak pahunchane ke liye neeche wala button dabao — tumhara email app khulega, review pehle se likha hoga, bas Send dabana hai.',
+  'rev.shareBtn': 'Email se bhejo',
+  'rev.lblProblem': 'Problem',
+  'rev.lblSuggestion': 'Suggestion',
+  'rev.noneWritten': '(abhi koi review nahi likha)',
+  'rev.noRating': 'rating nahi diya',
 }
 
 const hi: Dict = {
@@ -339,6 +346,13 @@ const hi: Dict = {
   'rev.anon': 'गुमनाम',
   'rev.thisDevice': 'इस डिवाइस की समीक्षाएँ',
   'rev.empty': 'अभी कोई समीक्षा नहीं। ऊपर फ़ॉर्म भरकर पहली समीक्षा लिखो!',
+  'rev.shareTitle': 'समीक्षा डेवलपर को भेजो',
+  'rev.shareSub': 'समीक्षा इस फ़ोन पर सेव होती है। डेवलपर तक पहुँचाने के लिए नीचे वाला बटन दबाओ — तुम्हारा ईमेल ऐप खुलेगा, समीक्षा पहले से लिखी होगी, बस Send दबाना है।',
+  'rev.shareBtn': 'ईमेल से भेजो',
+  'rev.lblProblem': 'दिक्कत',
+  'rev.lblSuggestion': 'सुझाव',
+  'rev.noneWritten': '(अभी कोई समीक्षा नहीं लिखी)',
+  'rev.noRating': 'रेटिंग नहीं दी',
 }
 
 const en: Dict = {
@@ -503,6 +517,13 @@ const en: Dict = {
   'rev.anon': 'Anonymous',
   'rev.thisDevice': 'Reviews on this device',
   'rev.empty': 'No reviews yet. Fill the form above to write the first one!',
+  'rev.shareTitle': 'Send Review to Developer',
+  'rev.shareSub': 'Reviews are saved on this phone. Tap the button below to send them to the developer — your email app opens with the reviews already written, just tap Send.',
+  'rev.shareBtn': 'Send by email',
+  'rev.lblProblem': 'Problem',
+  'rev.lblSuggestion': 'Suggestion',
+  'rev.noneWritten': '(no reviews written yet)',
+  'rev.noRating': 'no rating given',
 }
 
 export const dicts: Record<Lang, Dict> = { hi, hinglish, en }
