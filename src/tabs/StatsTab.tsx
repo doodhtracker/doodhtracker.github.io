@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore, useEntries, useRates, last7Days, typeTotal, fmtDate, filterByDateRange, animalBreakdown, calcPaisa, exportCSV, downloadCSV, todayStr } from '../store'
-import { Download, Filter, FileText } from 'lucide-react'
+import { Download, Filter, FileText, MessageCircle } from 'lucide-react'
 import { useT } from '../i18n'
 
 function BarChart({ data }: { data: { day: string; Subah: number; Shaam: number }[] }) {
@@ -84,6 +84,31 @@ export default function StatsTab() {
 
   function esc(v: string): string {
     return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+
+  function handleWhatsApp() {
+    const lines: string[] = []
+    lines.push('🥛 ' + t('pdf.title'))
+    if (displayName) lines.push(displayName)
+    lines.push(`${t('entry.date')}: ${fmtDate(fromDate)} — ${fmtDate(toDate)}`)
+    lines.push('')
+    lines.push(`${t('stats.totalMilk')}: ${grandTotal.toFixed(1)} L`)
+    lines.push(`${t('stats.totalEntries')}: ${filtered.length}`)
+    if (showMoney) lines.push(`${t('stats.totalMoney')}: ₹${totalPaisa.toFixed(0)}`)
+    lines.push('')
+    lines.push(`🐄 ${t('common.gaay')}: ${gaayTotal.toFixed(1)} L`)
+    lines.push(`🐃 ${t('common.bhains')}: ${bhainsTotal.toFixed(1)} L`)
+    if (animals.length > 0) {
+      lines.push('')
+      animals.forEach((a) => {
+        lines.push(`${a.type === 'gaay' ? '🐄' : '🐃'} ${a.name}: ${a.totalLiters.toFixed(1)} L (${a.entries})`)
+      })
+    }
+    lines.push('')
+    lines.push('— Doodh Tracker')
+
+    const url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'))
+    window.open(url, '_blank')
   }
 
   function handlePDF() {
@@ -229,12 +254,15 @@ export default function StatsTab() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <button onClick={handleExport} className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-          <Download size={20} /> {t('stats.export')}
-        </button>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <button onClick={handlePDF} className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
           <FileText size={20} /> {t('pdf.btn')}
+        </button>
+        <button onClick={handleWhatsApp} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+          <MessageCircle size={20} /> {t('wa.btn')}
+        </button>
+        <button onClick={handleExport} className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+          <Download size={20} /> {t('stats.export')}
         </button>
       </div>
       <p className="text-emerald-300 text-sm text-center -mt-1">{t('pdf.printHint')}</p>

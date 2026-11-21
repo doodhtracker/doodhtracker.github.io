@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useStore, useEntries, useRates, todayStr, fmtDate } from '../store'
-import { Check, Trash2, Sunrise, Sunset } from 'lucide-react'
-import type { AnimalType } from '../types'
+import { Check, Trash2, Sunrise, Sunset, Pencil, X } from 'lucide-react'
+import type { AnimalType, MilkEntry } from '../types'
 import { useT } from '../i18n'
 
 export default function EntryTab() {
   const addEntry = useStore((s) => s.addEntry)
   const removeEntry = useStore((s) => s.removeEntry)
+  const editEntry = useStore((s) => s.editEntry)
   const entries = useEntries()
   const rates = useRates()
   const t = useT()
@@ -18,6 +19,7 @@ export default function EntryTab() {
   const [liters, setLiters] = useState('')
   const [note, setNote] = useState('')
   const [saved, setSaved] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   const knownAnimals = [...new Set(entries.map((e) => e.animalName).filter(Boolean))] as string[]
 
@@ -25,16 +27,47 @@ export default function EntryTab() {
     e.preventDefault()
     const litersNum = parseFloat(liters)
     if (!liters || isNaN(litersNum) || litersNum <= 0) return
-    addEntry({
-      date, animalType, animalName: animalName || undefined, session,
-      liters: litersNum, note: note || undefined,
-    })
+
+    if (editingId !== null) {
+      // Purani entry sudharo
+      editEntry(editingId, {
+        date, animalType, animalName: animalName || undefined, session,
+        liters: litersNum, note: note || undefined,
+      })
+      setEditingId(null)
+    } else {
+      addEntry({
+        date, animalType, animalName: animalName || undefined, session,
+        liters: litersNum, note: note || undefined,
+      })
+    }
     setLiters('')
     setNote('')
     setAnimalName('')
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)
   }
+
+  function startEdit(e: MilkEntry) {
+    setEditingId(e.id)
+    setDate(e.date)
+    setSession(e.session)
+    setAnimalType(e.animalType)
+    setAnimalName(e.animalName || '')
+    setLiters(String(e.liters))
+    setNote(e.note || '')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setLiters('')
+    setNote('')
+    setAnimalName('')
+  }
+
+  const litersNum = parseFloat(liters)
+  const tooMuch = !isNaN(litersNum) && litersNum > 20
 
   const dayEntries = entries
     .filter((e) => e.date === date)
@@ -49,7 +82,20 @@ export default function EntryTab() {
   return (
     <div className="space-y-4 md:grid md:grid-cols-2 md:items-start md:gap-4 md:space-y-0">
       <form onSubmit={handleSubmit} className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800 space-y-3">
-        <h3 className="text-white font-bold">🥛 {t('entry.title')}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-white font-bold">🥛 {t('entry.title')}</h3>
+          {editingId !== null && (
+            <button type="button" onClick={cancelEdit}
+              className="flex items-center gap-1 text-sm text-amber-300 hover:text-amber-200 font-semibold">
+              <X size={15} /> {t('entry.cancelEdit')}
+            </button>
+          )}
+        </div>
+        {editingId !== null && (
+          <p className="text-amber-300 text-sm font-semibold bg-amber-950/40 border border-amber-800/40 rounded-lg px-3 py-2">
+            ✏️ {t('entry.editingNow')}
+          </p>
+        )}
         <div>
           <label className="text-emerald-300 text-xs font-semibold block mb-1">📅 {t('entry.date')}</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
@@ -99,6 +145,24 @@ export default function EntryTab() {
           <label className="text-emerald-300 text-xs font-semibold block mb-1">🥛 {t('entry.liters')}</label>
           <input type="number" step="0.1" min="0" value={liters} onChange={(e) => setLiters(e.target.value)}
             placeholder={t('entry.litersPh')} className={inputCls} />
+          {/* Jaldi chunne ke bade buttons — typing ki zaroorat nahi */}
+          <div className="grid grid-cols-6 gap-1.5 mt-2">
+            {[0.5, 1, 1.5, 2, 2.5, 3].map((v) => (
+              <button key={v} type="button" onClick={() => setLiters(String(v))}
+                className={`py-2.5 rounded-lg text-sm font-bold transition-colors ${
+                  liters === String(v)
+                    ? 'bg-amber-500 text-emerald-950'
+                    : 'bg-emerald-950/60 text-emerald-300 border border-emerald-700'
+                }`}>
+                {v}
+              </button>
+            ))}
+          </div>
+          {tooMuch && (
+            <p className="text-amber-300 text-sm font-semibold bg-amber-950/50 border border-amber-700/50 rounded-lg px-3 py-2 mt-2">
+              ⚠️ {t('entry.highWarn')}
+            </p>
+          )}
         </div>
         {currentRate > 0 && liters && (
           <div className="bg-green-950/40 border border-green-800/30 rounded-lg px-3 py-2 text-center">
@@ -112,7 +176,7 @@ export default function EntryTab() {
         </div>
         <button type="submit"
           className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-          <Check size={20} /> {saved ? `✅ ${t('entry.saved')}` : t('entry.save')}
+          <Check size={20} /> {saved ? `✅ ${t('entry.saved')}` : editingId !== null ? t('entry.update') : t('entry.save')}
         </button>
       </form>
 
@@ -144,7 +208,10 @@ export default function EntryTab() {
                       <p className="text-green-300 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
                     )}
                   </div>
-                  <button onClick={() => removeEntry(e.id)} className="text-red-300 hover:text-red-400 transition-colors">
+                  <button onClick={() => startEdit(e)} className="text-amber-300 hover:text-amber-200 transition-colors" title={t('entry.edit')}>
+                    <Pencil size={16} />
+                  </button>
+                  <button onClick={() => removeEntry(e.id)} className="text-red-300 hover:text-red-400 transition-colors" title="Delete">
                     <Trash2 size={16} />
                   </button>
                 </div>
