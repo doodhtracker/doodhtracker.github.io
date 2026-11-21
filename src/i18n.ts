@@ -186,6 +186,15 @@ const hinglish: Dict = {
   'about.text': 'Ye website Sheebu ne apne gaanv ke logon ke liye khaas banayi hai — doodh ka hisaab digitally save rakhne ke liye. Sheebu ka plan hai ki iska app version bhi launch karein.',
   'about.review': 'Agar yeh digital doodh notebook pasand aayi, to Review mein kuch likh do — seedha Sheebu ke email par chala jayega.',
   'about.btn': 'Review likho',
+  'pdf.btn': 'PDF Report banao',
+  'pdf.title': 'Doodh Tracker — Hisaab Report',
+  'pdf.dayWise': 'Din-wise hisaab',
+  'pdf.total': 'Kul',
+  'pdf.money': 'Paisa',
+  'pdf.madeOn': 'Report banaya',
+  'pdf.printHint': 'Print wali screen khulegi — wahan "Save as PDF" chuno.',
+  'pdf.popup': 'Nayi window nahi khuli. Browser mein popup allow karke dobara try karo.',
+  'pdf.noData': 'Is tareekh ke beech koi entry nahi hai.',
 }
 
 const hi: Dict = {
@@ -361,6 +370,15 @@ const hi: Dict = {
   'about.text': 'यह वेबसाइट शीबू ने अपने गाँव के लोगों के लिए ख़ास बनाई है — दूध का हिसाब डिजिटल तरीके से सुरक्षित रखने के लिए। शीबू का प्लान है कि इसका ऐप वर्ज़न भी लॉन्च करें।',
   'about.review': 'अगर यह डिजिटल दूध नोटबुक पसंद आई, तो समीक्षा में कुछ लिख दो — सीधे शीबू के ईमेल पर चला जाएगा।',
   'about.btn': 'समीक्षा लिखो',
+  'pdf.btn': 'PDF रिपोर्ट बनाओ',
+  'pdf.title': 'दूध ट्रैकर — हिसाब रिपोर्ट',
+  'pdf.dayWise': 'दिन-वार हिसाब',
+  'pdf.total': 'कुल',
+  'pdf.money': 'पैसा',
+  'pdf.madeOn': 'रिपोर्ट बनाया',
+  'pdf.printHint': 'प्रिंट वाली स्क्रीन खुलेगी — वहाँ "Save as PDF" चुनो।',
+  'pdf.popup': 'नई विंडो नहीं खुली। ब्राउज़र में पॉपअप की अनुमति देकर दोबारा कोशिश करो।',
+  'pdf.noData': 'इस तारीख़ के बीच कोई एंट्री नहीं है।',
 }
 
 const en: Dict = {
@@ -536,6 +554,15 @@ const en: Dict = {
   'about.text': 'Sheebu built this website specially for the people of his village — to keep milk records safe digitally. Sheebu plans to launch an app version too.',
   'about.review': 'If you liked this digital milk notebook, write something in Review — it goes straight to Sheebu email.',
   'about.btn': 'Write a review',
+  'pdf.btn': 'Create PDF Report',
+  'pdf.title': 'Doodh Tracker — Milk Report',
+  'pdf.dayWise': 'Day-wise account',
+  'pdf.total': 'Total',
+  'pdf.money': 'Money',
+  'pdf.madeOn': 'Report created',
+  'pdf.printHint': 'The print screen opens — choose "Save as PDF" there.',
+  'pdf.popup': 'The new window did not open. Allow popups in the browser and try again.',
+  'pdf.noData': 'No entries between these dates.',
 }
 
 export const dicts: Record<Lang, Dict> = { hi, hinglish, en }
