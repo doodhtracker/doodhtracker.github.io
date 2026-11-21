@@ -184,6 +184,12 @@ export default function EntryTab() {
           </div>
         )}
         <div>
+          <label className="text-emerald-300 text-xs font-semibold block mb-1">🧪 {t('entry.fat')}</label>
+          <input type="number" step="0.1" min="0" value={fat} onChange={(e) => setFat(e.target.value)}
+            placeholder={t('entry.fatPh')} className={inputCls} />
+          {fatRate > 0 && <p className="text-emerald-300 text-xs mt-1">{t('entry.fatHint')}</p>}
+        </div>
+        <div>
           <label className="text-emerald-300 text-xs font-semibold block mb-1">📝 {t('entry.note')}</label>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)}
             placeholder={t('entry.notePh')} className={inputCls} />
