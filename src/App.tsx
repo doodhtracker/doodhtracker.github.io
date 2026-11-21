@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Home, Plus, BarChart3, Settings, BookOpen, MessageSquare } from 'lucide-react'
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
@@ -25,6 +25,12 @@ export default function App() {
   const currentUser = useStore((s) => s.currentUser)
   const activeTab = useStore((s) => s.activeTab)
   const setActiveTab = useStore((s) => s.setActiveTab)
+  const mainRef = useRef<HTMLElement | null>(null)
+
+  // Tab badalne pe page upar se shuru ho
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [activeTab])
 
   useEffect(() => {
     if (!isCloudAvailable()) return
@@ -36,7 +42,7 @@ export default function App() {
   if (!currentUser) return <Login />
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-200 font-sans selection:bg-fuchsia-500/30 pb-24 md:pb-10">
+    <div className="flex min-h-[100dvh] flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-fuchsia-500/30">
       <Header />
 
       <nav className="hidden border-b border-emerald-800/70 bg-emerald-950/60 md:block">
@@ -62,7 +68,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="mx-auto w-full max-w-md px-4 py-4 md:max-w-3xl md:px-6 md:py-6">
+      <main ref={mainRef} className="mx-auto w-full max-w-md flex-1 px-4 py-4 md:max-w-3xl md:px-6 md:py-6">
         {activeTab === 'home' && <HomeTab />}
         {activeTab === 'entry' && <EntryTab />}
         {activeTab === 'stats' && <StatsTab />}
@@ -71,7 +77,7 @@ export default function App() {
         {activeTab === 'review' && <ReviewTab />}
       </main>
 
-      <div className="md:hidden">
+      <div className="sticky bottom-0 z-20 md:hidden">
         <BottomNav />
       </div>
     </div>
