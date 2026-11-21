@@ -31,6 +31,10 @@ export default function SettingsTab() {
   // ─── Cloud sync (Google) ───
   const users = useStore((s) => s.users)
   const cloudUser = useStore((s) => s.cloudUser)
+
+  // Google wale account ka andar ka ID (g:xxxx) chhupao — asli naam dikhao
+  const displayName =
+    (currentUser && users[currentUser]?.username) || cloudUser?.name || currentUser || ''
   const cloudStatus = useStore((s) => s.cloudStatus)
   const googleLogin = useStore((s) => s.googleLogin)
   const googleLogout = useStore((s) => s.googleLogout)
@@ -329,7 +333,7 @@ export default function SettingsTab() {
           <div className="flex items-center gap-2">
             <Milk className="text-amber-300" size={20} />
             <div>
-              <p className="text-white text-sm font-semibold">{currentUser}</p>
+              <p className="text-white text-sm font-semibold">{displayName}</p>
               <p className="text-emerald-300 text-xs">{entries.length} · {t('set.loggedIn')}</p>
             </div>
           </div>

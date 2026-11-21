@@ -48,6 +48,8 @@ export default function StatsTab() {
   const entries = useEntries()
   const rates = useRates()
   const currentUser = useStore((st) => st.currentUser)
+  const users = useStore((st) => st.users)
+  const cloudUser = useStore((st) => st.cloudUser)
   const t = useT()
   const [fromDate, setFromDate] = useState(todayStr().slice(0, 8) + '01')
   const [toDate, setToDate] = useState(todayStr())
@@ -75,6 +77,10 @@ export default function StatsTab() {
   }
 
   const showMoney = rates.gaay > 0 || rates.bhains > 0
+
+  // Google wale account ka andar ka ID (g:xxxx) PDF mein na dikhe
+  const displayName =
+    (currentUser && users[currentUser]?.username) || cloudUser?.name || currentUser || ''
 
   function esc(v: string): string {
     return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -138,7 +144,7 @@ export default function StatsTab() {
 </style></head><body>
   <h1>🥛 ${esc(t('pdf.title'))}</h1>
   <div class="sub">
-    ${esc(currentUser || '')}<br>
+    <strong style="font-size:13px;color:#111">${esc(displayName)}</strong>${cloudUser?.email ? `<br><span style="color:#666">${esc(cloudUser.email)}</span>` : ''}<br>
     ${esc(t('entry.date'))}: ${fmtDate(fromDate)} — ${fmtDate(toDate)}
   </div>
 
