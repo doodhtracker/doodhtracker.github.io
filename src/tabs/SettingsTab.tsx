@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
-import { useStore, useRates, useReminders, useEntries, exportCSV, downloadCSV, parseCSV, startReminders } from '../store'
-import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Cloud, CloudOff, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
+import { useStore, useRates, useReminders, useEntries, useDeductions, exportCSV, downloadCSV, parseCSV, startReminders, deductionTotal, todayStr, fmtDate } from '../store'
+import { Settings, Bell, Download, Upload, LogOut, Wallet, Milk, Cloud, CloudOff, ArrowDownToLine, ArrowUpFromLine, MinusCircle, Trash2 } from 'lucide-react'
 import { isCloudAvailable } from '../cloud'
 import { useT } from '../i18n'
 
@@ -17,6 +17,17 @@ export default function SettingsTab() {
 
   const [gaayRate, setGaayRate] = useState(String(rates.gaay || ''))
   const [bhainsRate, setBhainsRate] = useState(String(rates.bhains || ''))
+  const [gaayFat, setGaayFat] = useState(String(rates.gaayFat || ''))
+  const [bhainsFat, setBhainsFat] = useState(String(rates.bhainsFat || ''))
+
+  // ─── Advance / pashu aahar ───
+  const deductions = useDeductions()
+  const addDeduction = useStore((st) => st.addDeduction)
+  const removeDeduction = useStore((st) => st.removeDeduction)
+  const [dedKind, setDedKind] = useState<'advance' | 'aahar' | 'other'>('advance')
+  const [dedAmount, setDedAmount] = useState('')
+  const [dedNote, setDedNote] = useState('')
+  const [dedDate, setDedDate] = useState(todayStr())
   const [rateSaved, setRateSaved] = useState(false)
 
   const [mornEn, setMornEn] = useState(reminders.morningEnabled)
@@ -91,7 +102,7 @@ export default function SettingsTab() {
   }
 
   function saveRates() {
-    setRates(parseFloat(gaayRate) || 0, parseFloat(bhainsRate) || 0)
+    setRates(parseFloat(gaayRate) || 0, parseFloat(bhainsRate) || 0, parseFloat(gaayFat) || 0, parseFloat(bhainsFat) || 0)
     setRateSaved(true)
     setTimeout(() => setRateSaved(false), 1500)
   }
@@ -155,6 +166,24 @@ export default function SettingsTab() {
             <input type="number" step="0.5" min="0" value={bhainsRate} onChange={(e) => setBhainsRate(e.target.value)}
               placeholder={t('set.bhainsRatePh')}
               className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+          </div>
+          <div className="border-t border-emerald-800 pt-3">
+            <p className="text-amber-300 text-sm font-semibold mb-2">🧪 FAT se rate (dairy/society ke liye)</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-emerald-300 text-xs font-semibold block mb-1">🐄 {t('set.gaayFat')}</label>
+                <input type="number" step="5" min="0" value={gaayFat} onChange={(e) => setGaayFat(e.target.value)}
+                  placeholder={t('set.gaayFatPh')}
+                  className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+              </div>
+              <div>
+                <label className="text-emerald-300 text-xs font-semibold block mb-1">🐃 {t('set.bhainsFat')}</label>
+                <input type="number" step="5" min="0" value={bhainsFat} onChange={(e) => setBhainsFat(e.target.value)}
+                  placeholder={t('set.bhainsFatPh')}
+                  className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+              </div>
+              <p className="text-emerald-300 text-xs leading-relaxed">{t('set.fatNote')}</p>
+            </div>
           </div>
           <button onClick={saveRates}
             className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-2.5 rounded-lg transition-colors">
@@ -320,6 +349,86 @@ export default function SettingsTab() {
         {cloudMsg && (
           <div className={`mt-3 text-center text-sm ${cloudMsg.startsWith('✅') ? 'text-green-300' : 'text-red-300'}`}>
             {cloudMsg}
+          </div>
+        )}
+      </div>
+
+      {/* ─── ADVANCE / PASHAU AAHAR ─── */}
+      <div className="bg-emerald-900/50 rounded-2xl p-4 border border-emerald-800">
+        <div className="flex items-center gap-2 mb-3">
+          <MinusCircle className="text-amber-300" size={18} />
+          <h3 className="text-white font-bold text-sm">💰 {t('set.dedTitle')}</h3>
+        </div>
+        <p className="text-emerald-300 text-xs mb-3 leading-relaxed">{t('set.dedSub')}</p>
+
+        <div className="space-y-2">
+          <div>
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('set.dedKind')}</label>
+            <select value={dedKind} onChange={(e) => setDedKind(e.target.value as 'advance' | 'aahar' | 'other')}
+              className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
+              <option value="advance">{t('set.dedAdvance')}</option>
+              <option value="aahar">{t('set.dedAahar')}</option>
+              <option value="other">{t('set.dedOther')}</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('set.dedAmount')}</label>
+              <input type="number" step="10" min="0" value={dedAmount} onChange={(e) => setDedAmount(e.target.value)}
+                placeholder={t('set.dedAmountPh')}
+                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+            </div>
+            <div>
+              <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('entry.date')}</label>
+              <input type="date" value={dedDate} onChange={(e) => setDedDate(e.target.value)}
+                className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+            </div>
+          </div>
+          <div>
+            <label className="text-emerald-300 text-xs font-semibold block mb-1">{t('set.dedNote')}</label>
+            <input type="text" value={dedNote} onChange={(e) => setDedNote(e.target.value)}
+              placeholder={t('set.dedNotePh')}
+              className="w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+          </div>
+          <button
+            onClick={() => {
+              const amt = parseFloat(dedAmount)
+              if (!amt || amt <= 0) return
+              addDeduction({ date: dedDate, kind: dedKind, note: dedNote || undefined, amount: amt })
+              setDedAmount('')
+              setDedNote('')
+            }}
+            className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-2.5 rounded-lg transition-colors">
+            {t('set.dedAdd')}
+          </button>
+        </div>
+
+        {deductions.length === 0 ? (
+          <p className="text-emerald-300 text-sm text-center py-3">{t('set.dedEmpty')}</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {deductions.map((d) => (
+              <div key={d.id} className="flex items-center justify-between bg-emerald-950/40 rounded-lg p-2.5">
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold">
+                    {d.kind === 'advance' ? '💵 ' + t('set.dedAdvance') : d.kind === 'aahar' ? '🌾 ' + t('set.dedAahar') : '📝 ' + t('set.dedOther')}
+                  </p>
+                  <p className="text-emerald-300 text-xs">
+                    {fmtDate(d.date)}{d.note ? ' · ' + d.note : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-amber-300 font-bold text-sm">₹{d.amount.toFixed(0)}</span>
+                  <button onClick={() => removeDeduction(d.id)} className="text-red-300 hover:text-red-400 transition-colors">
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center justify-between border-t border-emerald-800 pt-2">
+              <span className="text-emerald-300 text-sm font-semibold">{t('set.dedTotal')}</span>
+              <span className="text-amber-300 font-bold">₹{deductionTotal(deductions).toFixed(0)}</span>
+            </div>
           </div>
         )}
       </div>

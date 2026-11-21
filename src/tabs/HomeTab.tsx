@@ -1,4 +1,4 @@
-import { useStore, useEntries, useRates, todayStr, dayTotal, sessionTotal, fmtDate, fmtMonth, monthStr, monthTotal, monthPaisa, last7Days } from '../store'
+import { useStore, useEntries, useRates, todayStr, dayTotal, sessionTotal, fmtDate, fmtMonth, monthStr, monthTotal, monthPaisa, last7Days, entryAmount } from '../store'
 import { Sunrise, Sunset, Plus, TrendingUp, Wallet, Trash2 } from 'lucide-react'
 import { useT } from '../i18n'
 
@@ -106,8 +106,8 @@ export default function HomeTab() {
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <p className="text-amber-300 font-bold">{e.liters.toFixed(1)} L</p>
-                    {(rates.gaay > 0 || rates.bhains > 0) && (
-                      <p className="text-green-300 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                    {(rates.gaay > 0 || rates.bhains > 0 || (e.fat || 0) > 0) && (
+                      <p className="text-green-300 text-xs">₹{entryAmount(e, rates).toFixed(0)}</p>
                     )}
                   </div>
                   <button onClick={() => removeEntry(e.id)} className="text-red-300 hover:text-red-400 transition-colors" title="Delete">

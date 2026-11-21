@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStore, useEntries, useRates, todayStr, fmtDate } from '../store'
+import { useStore, useEntries, useRates, todayStr, fmtDate, entryAmount } from '../store'
 import { Check, Trash2, Sunrise, Sunset, Pencil, X } from 'lucide-react'
 import type { AnimalType, MilkEntry } from '../types'
 import { useT } from '../i18n'
@@ -18,6 +18,7 @@ export default function EntryTab() {
   const [animalName, setAnimalName] = useState('')
   const [liters, setLiters] = useState('')
   const [note, setNote] = useState('')
+  const [fat, setFat] = useState('')
   const [saved, setSaved] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
 
@@ -33,17 +34,20 @@ export default function EntryTab() {
       editEntry(editingId, {
         date, animalType, animalName: animalName || undefined, session,
         liters: litersNum, note: note || undefined,
+        fat: parseFloat(fat) > 0 ? parseFloat(fat) : undefined,
       })
       setEditingId(null)
     } else {
       addEntry({
         date, animalType, animalName: animalName || undefined, session,
         liters: litersNum, note: note || undefined,
+        fat: parseFloat(fat) > 0 ? parseFloat(fat) : undefined,
       })
     }
     setLiters('')
     setNote('')
     setAnimalName('')
+    setFat('')
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)
   }
@@ -56,6 +60,7 @@ export default function EntryTab() {
     setAnimalName(e.animalName || '')
     setLiters(String(e.liters))
     setNote(e.note || '')
+    setFat(e.fat ? String(e.fat) : '')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -64,6 +69,7 @@ export default function EntryTab() {
     setLiters('')
     setNote('')
     setAnimalName('')
+    setFat('')
   }
 
   const litersNum = parseFloat(liters)
@@ -74,7 +80,15 @@ export default function EntryTab() {
     .sort((a, b) => (a.session === 'morning' ? -1 : 1) - (b.session === 'morning' ? -1 : 1))
 
   const currentRate = animalType === 'gaay' ? rates.gaay : rates.bhains
-  const paisaPreview = liters ? (parseFloat(liters) * currentRate) : 0
+  const fatRate = (animalType === 'gaay' ? rates.gaayFat : rates.bhainsFat) || 0
+  const fatNum = parseFloat(fat)
+  const useFat = !isNaN(fatNum) && fatNum > 0 && fatRate > 0
+  const paisaPreview = liters
+    ? useFat
+      ? (parseFloat(liters) * fatNum * fatRate) / 100
+      : parseFloat(liters) * currentRate
+    : 0
+  const showPaisaPreview = !!liters && (useFat || currentRate > 0)
 
   const inputCls =
     'w-full bg-emerald-950/60 text-white border border-emerald-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400'
@@ -164,7 +178,7 @@ export default function EntryTab() {
             </p>
           )}
         </div>
-        {currentRate > 0 && liters && (
+        {showPaisaPreview && (
           <div className="bg-green-950/40 border border-green-800/30 rounded-lg px-3 py-2 text-center">
             <p className="text-green-300 text-sm">💰 {t('entry.money')}: <b>₹{paisaPreview.toFixed(2)}</b> ({liters}L × ₹{currentRate}/L)</p>
           </div>
@@ -204,8 +218,8 @@ export default function EntryTab() {
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <p className="text-amber-300 font-bold">{e.liters.toFixed(1)} L</p>
-                    {(e.animalType === 'gaay' ? rates.gaay : rates.bhains) > 0 && (
-                      <p className="text-green-300 text-xs">₹{(e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                    {((e.animalType === 'gaay' ? rates.gaay : rates.bhains) > 0 || (e.fat || 0) > 0) && (
+                      <p className="text-green-300 text-xs">₹{entryAmount(e, rates).toFixed(0)}</p>
                     )}
                   </div>
                   <button onClick={() => startEdit(e)} className="text-amber-300 hover:text-amber-200 transition-colors" title={t('entry.edit')}>

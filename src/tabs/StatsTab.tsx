@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStore, useEntries, useRates, last7Days, typeTotal, fmtDate, filterByDateRange, animalBreakdown, calcPaisa, exportCSV, downloadCSV, todayStr } from '../store'
+import { useStore, useEntries, useRates, useDeductions, last7Days, typeTotal, fmtDate, filterByDateRange, animalBreakdown, calcPaisa, exportCSV, downloadCSV, todayStr, deductionTotal, entryAmount } from '../store'
 import { Download, Filter, FileText, MessageCircle } from 'lucide-react'
 import { useT } from '../i18n'
 
@@ -69,7 +69,10 @@ export default function StatsTab() {
   const bhainsTotal = typeTotal(filtered, 'bhains')
   const grandTotal = filtered.reduce((s, e) => s + e.liters, 0)
   const totalPaisa = calcPaisa(filtered, rates)
-  const animals = animalBreakdown(filtered)
+  const deductions = useDeductions()
+  const dedTotal = deductionTotal(deductions)
+  const netPayable = totalPaisa - dedTotal
+  const animals = animalBreakdown(filtered, rates)
 
   function handleExport() {
     const csv = exportCSV(filtered, rates)
@@ -95,6 +98,10 @@ export default function StatsTab() {
     lines.push(`${t('stats.totalMilk')}: ${grandTotal.toFixed(1)} L`)
     lines.push(`${t('stats.totalEntries')}: ${filtered.length}`)
     if (showMoney) lines.push(`${t('stats.totalMoney')}: ₹${totalPaisa.toFixed(0)}`)
+    if (showMoney && dedTotal > 0) {
+      lines.push(`${t('stats.deductions')}: -₹${dedTotal.toFixed(0)}`)
+      lines.push(`${t('stats.netPayable')}: ₹${netPayable.toFixed(0)}`)
+    }
     lines.push('')
     lines.push(`🐄 ${t('common.gaay')}: ${gaayTotal.toFixed(1)} L`)
     lines.push(`🐃 ${t('common.bhains')}: ${bhainsTotal.toFixed(1)} L`)
@@ -141,7 +148,7 @@ export default function StatsTab() {
              ${animals
                .map((a) => {
                  const rate = a.type === 'gaay' ? rates.gaay : rates.bhains
-                 return `<tr><td>${a.type === 'gaay' ? '🐄' : '🐃'} ${esc(a.name)}</td><td>${a.entries}</td><td>${a.totalLiters.toFixed(1)}</td>${showMoney ? `<td>₹${(a.totalLiters * rate).toFixed(0)}</td>` : ''}</tr>`
+                 return `<tr><td>${a.type === 'gaay' ? '🐄' : '🐃'} ${esc(a.name)}</td><td>${a.entries}</td><td>${a.totalLiters.toFixed(1)}</td>${showMoney ? `<td>₹${(a.totalAmount || 0).toFixed(0)}</td>` : ''}</tr>`
                })
                .join('')}
            </tbody>
@@ -179,6 +186,8 @@ export default function StatsTab() {
     ${showMoney ? `<div class="box"><div class="lbl">${esc(t('stats.totalMoney'))}</div><div class="val">₹${totalPaisa.toFixed(0)}</div></div>` : ''}
     <div class="box"><div class="lbl">🐄 ${esc(t('common.gaay'))}</div><div class="val">${gaayTotal.toFixed(1)} L</div></div>
     <div class="box"><div class="lbl">🐃 ${esc(t('common.bhains'))}</div><div class="val">${bhainsTotal.toFixed(1)} L</div></div>
+    ${showMoney ? `<div class="box"><div class="lbl">➖ ${esc(t('stats.deductions'))}</div><div class="val">₹${dedTotal.toFixed(0)}</div></div>` : ''}
+    ${showMoney ? `<div class="box"><div class="lbl">💰 ${esc(t('stats.netPayable'))}</div><div class="val">₹${netPayable.toFixed(0)}</div></div>` : ''}
   </div>
 
   <h2>${esc(t('pdf.dayWise'))}</h2>
@@ -199,6 +208,20 @@ export default function StatsTab() {
       ${showMoney ? `<td>₹${totalPaisa.toFixed(0)}</td>` : ''}
     </tr></tfoot>
   </table>
+
+  ${dedTotal > 0 ? `<h2>${esc(t('stats.deductions'))}</h2>
+  <table>
+    <thead><tr><th>${esc(t('entry.date'))}</th><th>${esc(t('set.dedKind'))}</th><th>${esc(t('set.dedNote'))}</th><th>${esc(t('pdf.money'))}</th></tr></thead>
+    <tbody>
+      ${deductions
+        .map(
+          (d) =>
+            `<tr><td>${fmtDate(d.date)}</td><td>${esc(d.kind === 'advance' ? t('set.dedAdvance') : d.kind === 'aahar' ? t('set.dedAahar') : t('set.dedOther'))}</td><td>${esc(d.note || '-')}</td><td>₹${d.amount.toFixed(0)}</td></tr>`,
+        )
+        .join('')}
+    </tbody>
+    <tfoot><tr><td colspan="3">${esc(t('set.dedTotal'))}</td><td>₹${dedTotal.toFixed(0)}</td></tr></tfoot>
+  </table>` : ''}
 
   ${animalRows}
 
@@ -255,7 +278,20 @@ export default function StatsTab() {
       )}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button onClick={handlePDF} className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+        {showMoney && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-amber-950/40 rounded-xl p-3 border border-amber-800/30 text-center">
+            <p className="text-amber-300 text-xs">➖ {t('stats.deductions')}</p>
+            <p className="text-amber-300 text-xl font-bold">₹{dedTotal.toFixed(0)}</p>
+          </div>
+          <div className="bg-emerald-950/60 rounded-xl p-3 border border-emerald-700 text-center">
+            <p className="text-emerald-300 text-xs">💰 {t('stats.netPayable')}</p>
+            <p className={`text-xl font-bold ${netPayable < 0 ? 'text-red-300' : 'text-green-300'}`}>₹{netPayable.toFixed(0)}</p>
+          </div>
+        </div>
+      )}
+
+      <button onClick={handlePDF} className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
           <FileText size={20} /> {t('pdf.btn')}
         </button>
         <button onClick={handleWhatsApp} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
@@ -292,8 +328,8 @@ export default function StatsTab() {
                 </div>
                 <div className="text-right">
                   <p className="text-amber-300 font-bold">{a.totalLiters.toFixed(1)} L</p>
-                  {(rates.gaay > 0 || rates.bhains > 0) && (
-                    <p className="text-green-300 text-xs">₹{(a.totalLiters * (a.type === 'gaay' ? rates.gaay : rates.bhains)).toFixed(0)}</p>
+                  {(rates.gaay > 0 || rates.bhains > 0 || (rates.gaayFat || 0) > 0 || (rates.bhainsFat || 0) > 0) && (
+                    <p className="text-green-300 text-xs">₹{(a.totalAmount || 0).toFixed(0)}</p>
                   )}
                 </div>
               </div>
