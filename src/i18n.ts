@@ -195,6 +195,12 @@ const hinglish: Dict = {
   'pdf.printHint': 'Print wali screen khulegi — wahan "Save as PDF" chuno.',
   'pdf.popup': 'Nayi window nahi khuli. Browser mein popup allow karke dobara try karo.',
   'pdf.noData': 'Is tareekh ke beech koi entry nahi hai.',
+  'entry.edit': 'Sudharo',
+  'entry.update': 'Update Karo',
+  'entry.cancelEdit': 'Cancel karo',
+  'entry.editingNow': 'Purani entry sudhar rahe ho',
+  'entry.highWarn': 'Itna zyada doodh? Ek baar check kar lo — 20 litre se upar hai.',
+  'wa.btn': 'WhatsApp par parchi bhejo',
 }
 
 const hi: Dict = {
@@ -379,6 +385,12 @@ const hi: Dict = {
   'pdf.printHint': 'प्रिंट वाली स्क्रीन खुलेगी — वहाँ "Save as PDF" चुनो।',
   'pdf.popup': 'नई विंडो नहीं खुली। ब्राउज़र में पॉपअप की अनुमति देकर दोबारा कोशिश करो।',
   'pdf.noData': 'इस तारीख़ के बीच कोई एंट्री नहीं है।',
+  'entry.edit': 'सुधारो',
+  'entry.update': 'अपडेट करो',
+  'entry.cancelEdit': 'कैंसल करो',
+  'entry.editingNow': 'पुरानी एंट्री सुधार रहे हो',
+  'entry.highWarn': 'इतना ज़्यादा दूध? एक बार देख लो — 20 लीटर से ऊपर है।',
+  'wa.btn': 'WhatsApp पर पर्ची भेजो',
 }
 
 const en: Dict = {
@@ -563,6 +575,12 @@ const en: Dict = {
   'pdf.printHint': 'The print screen opens — choose "Save as PDF" there.',
   'pdf.popup': 'The new window did not open. Allow popups in the browser and try again.',
   'pdf.noData': 'No entries between these dates.',
+  'entry.edit': 'Edit',
+  'entry.update': 'Update',
+  'entry.cancelEdit': 'Cancel',
+  'entry.editingNow': 'Editing an old entry',
+  'entry.highWarn': 'That much milk? Please check — it is above 20 litres.',
+  'wa.btn': 'Send slip on WhatsApp',
 }
 
 export const dicts: Record<Lang, Dict> = { hi, hinglish, en }

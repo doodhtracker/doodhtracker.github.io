@@ -51,6 +51,7 @@ interface StoreState {
 
   addEntry: (e: Omit<MilkEntry, 'id' | 'createdAt'>) => void
   removeEntry: (id: number) => void
+  editEntry: (id: number, updates: Partial<Omit<MilkEntry, 'id' | 'createdAt'>>) => void
   importEntries: (entries: MilkEntry[]) => void
 
   // Reviews — device pe save hote hain (per-user nahi, taaki ek hi phone pe
@@ -261,6 +262,18 @@ export const useStore = create<StoreState>()(
         if (!u) return
         set((s) => ({
           allEntries: { ...s.allEntries, [u]: (s.allEntries[u] || []).filter((e) => e.id !== id) },
+        }))
+        scheduleCloudPush(get)
+      },
+
+      editEntry: (id, updates) => {
+        const u = get().currentUser
+        if (!u) return
+        set((s) => ({
+          allEntries: {
+            ...s.allEntries,
+            [u]: (s.allEntries[u] || []).map((e) => (e.id === id ? { ...e, ...updates } : e)),
+          },
         }))
         scheduleCloudPush(get)
       },
