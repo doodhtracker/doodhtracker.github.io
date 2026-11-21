@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useEntries, useRates, last7Days, typeTotal, fmtDate, filterByDateRange, animalBreakdown, calcPaisa, exportCSV, downloadCSV, todayStr } from '../store'
-import { Download, Filter } from 'lucide-react'
+import { useStore, useEntries, useRates, last7Days, typeTotal, fmtDate, filterByDateRange, animalBreakdown, calcPaisa, exportCSV, downloadCSV, todayStr } from '../store'
+import { Download, Filter, FileText } from 'lucide-react'
 import { useT } from '../i18n'
 
 function BarChart({ data }: { data: { day: string; Subah: number; Shaam: number }[] }) {
@@ -47,6 +47,7 @@ function PieChart({ gaay, bhains }: { gaay: number; bhains: number }) {
 export default function StatsTab() {
   const entries = useEntries()
   const rates = useRates()
+  const currentUser = useStore((st) => st.currentUser)
   const t = useT()
   const [fromDate, setFromDate] = useState(todayStr().slice(0, 8) + '01')
   const [toDate, setToDate] = useState(todayStr())
@@ -71,6 +72,125 @@ export default function StatsTab() {
   function handleExport() {
     const csv = exportCSV(filtered, rates)
     downloadCSV(csv, `doodh-tracker-${fromDate}-to-${toDate}.csv`)
+  }
+
+  const showMoney = rates.gaay > 0 || rates.bhains > 0
+
+  function esc(v: string): string {
+    return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+
+  function handlePDF() {
+    const byDate = new Map<string, { m: number; e: number; l: number; p: number }>()
+    filtered.forEach((x) => {
+      const rate = x.animalType === 'gaay' ? rates.gaay : rates.bhains
+      const row = byDate.get(x.date) || { m: 0, e: 0, l: 0, p: 0 }
+      if (x.session === 'morning') row.m += x.liters
+      else row.e += x.liters
+      row.l += x.liters
+      row.p += x.liters * rate
+      byDate.set(x.date, row)
+    })
+    const dates = [...byDate.keys()].sort()
+
+    const dayRows = dates.length
+      ? dates
+          .map((d) => {
+            const r = byDate.get(d)!
+            return `<tr><td>${fmtDate(d)}</td><td>${r.m.toFixed(1)}</td><td>${r.e.toFixed(1)}</td><td>${r.l.toFixed(1)}</td><td>${showMoney ? '₹' + r.p.toFixed(0) : '-'}</td></tr>`
+          })
+          .join('')
+      : `<tr><td colspan="5" style="text-align:center;color:#888">${esc(t('pdf.noData'))}</td></tr>`
+
+    const animalRows = animals.length
+      ? `<h2>${esc(t('stats.animalWise'))}</h2>
+         <table>
+           <thead><tr><th>${esc(t('entry.animal'))}</th><th>${esc(t('stats.entriesWord'))}</th><th>${esc(t('entry.liters'))}</th>${showMoney ? `<th>${esc(t('pdf.money'))}</th>` : ''}</tr></thead>
+           <tbody>
+             ${animals
+               .map((a) => {
+                 const rate = a.type === 'gaay' ? rates.gaay : rates.bhains
+                 return `<tr><td>${a.type === 'gaay' ? '🐄' : '🐃'} ${esc(a.name)}</td><td>${a.entries}</td><td>${a.totalLiters.toFixed(1)}</td>${showMoney ? `<td>₹${(a.totalLiters * rate).toFixed(0)}</td>` : ''}</tr>`
+               })
+               .join('')}
+           </tbody>
+         </table>`
+      : ''
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(t('pdf.title'))}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#111;margin:0;padding:20px;background:#fff}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:12px;margin-bottom:16px;line-height:1.6}
+  .grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .box{flex:1 1 30%;border:1px solid #ccc;border-radius:8px;padding:8px;text-align:center;min-width:110px}
+  .lbl{font-size:11px;color:#666}
+  .val{font-size:17px;font-weight:700;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+  th,td{border:1px solid #ccc;padding:5px 7px;text-align:right}
+  th{background:#f0f0f0;text-align:center;font-size:11px}
+  td:first-child,th:first-child{text-align:left}
+  tfoot td{font-weight:700;background:#f7f7f7}
+  h2{font-size:14px;margin:16px 0 8px}
+  .foot{margin-top:18px;font-size:10px;color:#777;text-align:center;border-top:1px solid #ddd;padding-top:8px}
+  @media print{body{padding:8px}@page{margin:10mm}}
+</style></head><body>
+  <h1>🥛 ${esc(t('pdf.title'))}</h1>
+  <div class="sub">
+    ${esc(currentUser || '')}<br>
+    ${esc(t('entry.date'))}: ${fmtDate(fromDate)} — ${fmtDate(toDate)}
+  </div>
+
+  <div class="grid">
+    <div class="box"><div class="lbl">${esc(t('stats.totalMilk'))}</div><div class="val">${grandTotal.toFixed(1)} L</div></div>
+    <div class="box"><div class="lbl">${esc(t('stats.totalEntries'))}</div><div class="val">${filtered.length}</div></div>
+    ${showMoney ? `<div class="box"><div class="lbl">${esc(t('stats.totalMoney'))}</div><div class="val">₹${totalPaisa.toFixed(0)}</div></div>` : ''}
+    <div class="box"><div class="lbl">🐄 ${esc(t('common.gaay'))}</div><div class="val">${gaayTotal.toFixed(1)} L</div></div>
+    <div class="box"><div class="lbl">🐃 ${esc(t('common.bhains'))}</div><div class="val">${bhainsTotal.toFixed(1)} L</div></div>
+  </div>
+
+  <h2>${esc(t('pdf.dayWise'))}</h2>
+  <table>
+    <thead><tr>
+      <th>${esc(t('entry.date'))}</th>
+      <th>${esc(t('home.morning'))}</th>
+      <th>${esc(t('home.evening'))}</th>
+      <th>${esc(t('pdf.total'))}</th>
+      ${showMoney ? `<th>${esc(t('pdf.money'))}</th>` : ''}
+    </tr></thead>
+    <tbody>${dayRows}</tbody>
+    <tfoot><tr>
+      <td>${esc(t('pdf.total'))}</td>
+      <td>${dates.reduce((a, d) => a + byDate.get(d)!.m, 0).toFixed(1)}</td>
+      <td>${dates.reduce((a, d) => a + byDate.get(d)!.e, 0).toFixed(1)}</td>
+      <td>${grandTotal.toFixed(1)}</td>
+      ${showMoney ? `<td>₹${totalPaisa.toFixed(0)}</td>` : ''}
+    </tr></tfoot>
+  </table>
+
+  ${animalRows}
+
+  <div class="foot">
+    ${esc(t('pdf.madeOn'))}: ${fmtDate(todayStr())} ${new Date().toLocaleTimeString()} · Doodh Tracker
+  </div>
+</body></html>`
+
+    const w = window.open('', '_blank')
+    if (!w) {
+      alert(t('pdf.popup'))
+      return
+    }
+    w.document.write(html)
+    w.document.close()
+    w.focus()
+    setTimeout(() => {
+      try {
+        w.print()
+      } catch {
+        /* user can press print manually */
+      }
+    }, 500)
   }
 
   return (
@@ -103,9 +223,15 @@ export default function StatsTab() {
         </div>
       )}
 
-      <button onClick={handleExport} className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-        <Download size={20} /> {t('stats.export')}
-      </button>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <button onClick={handleExport} className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+          <Download size={20} /> {t('stats.export')}
+        </button>
+        <button onClick={handlePDF} className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+          <FileText size={20} /> {t('pdf.btn')}
+        </button>
+      </div>
+      <p className="text-emerald-300 text-sm text-center -mt-1">{t('pdf.printHint')}</p>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-amber-950/40 rounded-xl p-3 border border-amber-800/30 text-center"><p className="text-amber-300 text-xs">🐄 {t('common.gaay')}</p><p className="text-white text-xl font-bold">{gaayTotal.toFixed(1)} L</p></div>
