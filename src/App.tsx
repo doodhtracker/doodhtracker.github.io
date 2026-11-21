@@ -27,9 +27,8 @@ export default function App() {
   const setActiveTab = useStore((s) => s.setActiveTab)
   const mainRef = useRef<HTMLElement | null>(null)
 
-  // Tab badalne pe page upar se shuru ho
   useEffect(() => {
-    window.scrollTo({ top: 0 })
+    mainRef.current?.scrollTo({ top: 0 })
   }, [activeTab])
 
   useEffect(() => {
@@ -42,11 +41,13 @@ export default function App() {
   if (!currentUser) return <Login />
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-fuchsia-500/30">
-      <Header />
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-zinc-950 text-zinc-200 font-sans selection:bg-fuchsia-500/30">
+      <div className="shrink-0">
+        <Header />
+      </div>
 
-      <nav className="hidden border-b border-emerald-800/70 bg-emerald-950/60 md:block">
-        <div className="mx-auto flex w-full max-w-md items-center gap-1 px-4 py-2 md:max-w-3xl md:px-6">
+      <nav className="hidden shrink-0 border-b border-emerald-800/70 bg-emerald-950/60 md:block">
+        <div className="mx-auto flex w-full items-center gap-1 px-4 py-2 md:max-w-3xl md:px-6">
           {TABS.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -68,16 +69,18 @@ export default function App() {
         </div>
       </nav>
 
-      <main ref={mainRef} className="mx-auto w-full max-w-md flex-1 px-4 py-4 md:max-w-3xl md:px-6 md:py-6">
-        {activeTab === 'home' && <HomeTab />}
-        {activeTab === 'entry' && <EntryTab />}
-        {activeTab === 'stats' && <StatsTab />}
-        {activeTab === 'settings' && <SettingsTab />}
-        {activeTab === 'guide' && <GuideTab />}
-        {activeTab === 'review' && <ReviewTab />}
+      <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-md px-4 py-4 md:max-w-3xl md:px-6 md:py-6">
+          {activeTab === 'home' && <HomeTab />}
+          {activeTab === 'entry' && <EntryTab />}
+          {activeTab === 'stats' && <StatsTab />}
+          {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'guide' && <GuideTab />}
+          {activeTab === 'review' && <ReviewTab />}
+        </div>
       </main>
 
-      <div className="sticky bottom-0 z-20 md:hidden">
+      <div className="shrink-0 md:hidden">
         <BottomNav />
       </div>
     </div>
