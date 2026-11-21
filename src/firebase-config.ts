@@ -1,12 +1,14 @@
+/// <reference types="vite/client" />
+
 export const firebaseConfig = {
-  apiKey: 'AIzaSyBn1X0m0KKKdgUMjjLhoS54cd1PQ1MQreI',
-  authDomain: 'doodh-tracker-bb78a.firebaseapp.com',
-  projectId: 'doodh-tracker-bb78a',
-  storageBucket: 'doodh-tracker-bb78a.firebasestorage.app',
-  messagingSenderId: '192825303582',
-  appId: '1:192825303582:web:117b441e6d2ba045d6040f',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
 }
 
-export const isFirebaseConfigured: boolean = !Object.values(firebaseConfig).some((v) =>
-  String(v).includes('PASTE_'),
+export const isFirebaseConfigured: boolean = Object.values(firebaseConfig).every(
+  (v) => Boolean(v) && !String(v).includes('PASTE_'),
 )
