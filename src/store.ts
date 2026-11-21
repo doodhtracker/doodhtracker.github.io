@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { MilkEntry, User, Tab, Rates, Review } from './types'
+import type { MilkEntry, User, Tab, Rates, Review, Deduction } from './types'
 import { hashPin, verifyPin, encryptData, decryptData } from './crypto'
 import { isCloudAvailable, signInWithGoogle, signOutGoogle, loadCloud, saveCloud, type CloudUser } from './cloud'
 import type { BackupData } from './backup'
@@ -38,10 +38,16 @@ interface StoreState {
   nextEntryId: Record<string, number>
 
   allRates: Record<string, Rates>
-  setRates: (gaay: number, bhains: number) => void
+  setRates: (gaay: number, bhains: number, gaayFat?: number, bhainsFat?: number) => void
 
   allReminders: Record<string, ReminderConfig>
   setReminders: (config: ReminderConfig) => void
+
+  // Advance / pashu aahar — bill se minus
+  allDeductions: Record<string, Deduction[]>
+  nextDeductionId: Record<string, number>
+  addDeduction: (d: Omit<Deduction, 'id' | 'createdAt'>) => void
+  removeDeduction: (id: number) => void
 
   activeTab: Tab
   setActiveTab: (t: Tab) => void
@@ -173,6 +179,8 @@ export const useStore = create<StoreState>()(
       nextEntryId: {},
       allRates: {},
       allReminders: {},
+      allDeductions: {},
+      nextDeductionId: {},
       activeTab: 'home',
       lang: 'hi' as Lang,
       reviews: [],
@@ -232,10 +240,35 @@ export const useStore = create<StoreState>()(
       setActiveTab: (t) => set({ activeTab: t }),
       setLang: (l) => set({ lang: l }),
 
-      setRates: (gaay, bhains) => {
+      setRates: (gaay, bhains, gaayFat, bhainsFat) => {
         const u = get().currentUser
         if (!u) return
-        set((s) => ({ allRates: { ...s.allRates, [u]: { gaay, bhains } } }))
+        set((s) => ({
+          allRates: { ...s.allRates, [u]: { gaay, bhains, gaayFat: gaayFat || 0, bhainsFat: bhainsFat || 0 } },
+        }))
+        scheduleCloudPush(get)
+      },
+
+      addDeduction: (d) => {
+        const u = get().currentUser
+        if (!u) return
+        const id = get().nextDeductionId[u] || 1
+        set((s) => ({
+          allDeductions: {
+            ...s.allDeductions,
+            [u]: [{ ...d, id, createdAt: Date.now() }, ...(s.allDeductions[u] || [])],
+          },
+          nextDeductionId: { ...s.nextDeductionId, [u]: id + 1 },
+        }))
+        scheduleCloudPush(get)
+      },
+
+      removeDeduction: (id) => {
+        const u = get().currentUser
+        if (!u) return
+        set((s) => ({
+          allDeductions: { ...s.allDeductions, [u]: (s.allDeductions[u] || []).filter((d) => d.id !== id) },
+        }))
         scheduleCloudPush(get)
       },
 
@@ -401,6 +434,7 @@ export const useStore = create<StoreState>()(
             {
               entries: allEntries[currentUser] || [],
               rates: allRates[currentUser] || { gaay: 0, bhains: 0 },
+              deductions: get().allDeductions[currentUser] || [],
               reminders: allReminders[currentUser] || DEFAULT_REMINDERS,
             },
             cloudUser.email,
@@ -503,6 +537,12 @@ export function useRates(): Rates {
   return currentUser ? (allRates[currentUser] || { gaay: 0, bhains: 0 }) : { gaay: 0, bhains: 0 }
 }
 
+export function useDeductions(): Deduction[] {
+  const currentUser = useStore((s) => s.currentUser)
+  const allDeductions = useStore((s) => s.allDeductions)
+  return currentUser ? allDeductions[currentUser] || [] : []
+}
+
 export function useReviews(): Review[] {
   return useStore((s) => s.reviews) || []
 }
@@ -552,21 +592,51 @@ export interface AnimalStat {
   type: 'gaay' | 'bhains'
   totalLiters: number
   entries: number
+  /** Kul paisa (jab rates diye ho) */
+  totalAmount?: number
 }
 
-export function animalBreakdown(entries: MilkEntry[]): AnimalStat[] {
-  const map: Record<string, AnimalStat> = {}
+export function animalBreakdown(entries: MilkEntry[], rates?: Rates): AnimalStat[] {
+  const map: Record<string, AnimalStat & { totalAmount?: number }> = {}
   for (const e of entries) {
     const key = `${e.animalType}-${e.animalName || 'default'}`
-    if (!map[key]) map[key] = { name: e.animalName || (e.animalType === 'gaay' ? 'Gaay' : 'Bhains'), type: e.animalType, totalLiters: 0, entries: 0 }
+    if (!map[key]) {
+      map[key] = {
+        name: e.animalName || (e.animalType === 'gaay' ? 'Gaay' : 'Bhains'),
+        type: e.animalType,
+        totalLiters: 0,
+        entries: 0,
+        totalAmount: 0,
+      }
+    }
     map[key].totalLiters += e.liters
     map[key].entries++
+    if (rates) map[key].totalAmount = (map[key].totalAmount || 0) + entryAmount(e, rates)
   }
-  return Object.values(map).sort((a, b) => b.totalLiters - a.totalLiters)
+  return Object.values(map).sort((a, b) => b.totalLiters - a.totalLiters) as AnimalStat[]
+}
+
+/**
+ * Ek entry ka paisa.
+ * Agar entry mein FAT diya hai aur FAT rate bhi set hai -> FAT se hisaab:
+ *   paisa = litre x (FAT/100) x (₹ per kg FAT)
+ * Warna simple ₹/litre rate se.
+ */
+export function entryAmount(e: MilkEntry, rates: Rates): number {
+  const fatRate = (e.animalType === 'gaay' ? rates.gaayFat : rates.bhainsFat) || 0
+  if (e.fat && e.fat > 0 && fatRate > 0) {
+    return (e.liters * e.fat * fatRate) / 100
+  }
+  const fixed = (e.animalType === 'gaay' ? rates.gaay : rates.bhains) || 0
+  return e.liters * fixed
 }
 
 export function calcPaisa(entries: MilkEntry[], rates: Rates): number {
-  return entries.reduce((s, e) => s + e.liters * (e.animalType === 'gaay' ? rates.gaay : rates.bhains), 0)
+  return entries.reduce((s, e) => s + entryAmount(e, rates), 0)
+}
+
+export function deductionTotal(list: Deduction[]): number {
+  return list.reduce((s, d) => s + (d.amount || 0), 0)
 }
 
 export function monthTotal(entries: MilkEntry[], month: string): number {

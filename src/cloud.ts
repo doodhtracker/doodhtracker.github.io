@@ -15,7 +15,8 @@ export interface CloudUser {
 
 export interface CloudPayload {
   entries: unknown[]
-  rates: { gaay: number; bhains: number }
+  rates: { gaay: number; bhains: number; gaayFat?: number; bhainsFat?: number }
+  deductions?: unknown[]
   reminders: {
     morningEnabled: boolean
     eveningEnabled: boolean

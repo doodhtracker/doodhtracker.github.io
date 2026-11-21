@@ -9,6 +9,8 @@ export interface MilkEntry {
   session: 'morning' | 'evening'
   liters: number
   note?: string
+  /** FAT % — dairy/society ke liye (optional). Diya ho to rate FAT se lagta hai. */
+  fat?: number
   createdAt: number
 }
 
@@ -20,6 +22,19 @@ export interface User {
 export interface Rates {
   gaay: number
   bhains: number
+  /** ₹ per kg FAT — dairy/society ka tarika (optional) */
+  gaayFat?: number
+  bhainsFat?: number
+}
+
+/** Advance ya pashu aahar — jo bill se minus hota hai */
+export interface Deduction {
+  id: number
+  date: string
+  kind: 'advance' | 'aahar' | 'other'
+  note?: string
+  amount: number
+  createdAt: number
 }
 
 // Review / feedback — koi bhi user apni problem ya suggestion likh sakta hai
