@@ -17,7 +17,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 bg-emerald-950/95 backdrop-blur border-t border-emerald-800">
+    <nav className="w-full bg-emerald-950/95 backdrop-blur border-t border-emerald-800 pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto flex">
         {tabs.map((tab) => {
           const Icon = tab.icon
